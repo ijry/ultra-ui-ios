@@ -1,0 +1,41 @@
+name: UltraUIDemo
+options:
+  bundleIdPrefix: com.xyito
+  deploymentTarget:
+    iOS: "17.0"
+packages:
+  UltraUI:
+    path: UltraUI
+targets:
+  UltraUIDemo:
+    type: application
+    platform: iOS
+    sources: [Demo]
+    dependencies:
+      - package: UltraUI
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.xyito.ultrauidemo
+        SWIFT_VERSION: "6.0"
+  UltraUITests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [UltraUI/Tests]
+    dependencies:
+      - target: UltraUIDemo
+      - package: UltraUI
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "6.0"
+schemes:
+  UltraUIDemo:
+    build:
+      targets:
+        UltraUIDemo: all
+    run:
+      config: Debug
+    test:
+      targets:
+        - UltraUITests
