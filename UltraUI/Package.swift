@@ -8,7 +8,7 @@ let package = Package(
         .library(name: "UltraUI", targets: ["UltraUI"])
     ],
     targets: [
-        .target(name: "UltraUI"),
+        .target(name: "UltraUI", resources: [.process("Resources")]),
         .testTarget(name: "UltraUITests", dependencies: ["UltraUI"])
     ]
 )
