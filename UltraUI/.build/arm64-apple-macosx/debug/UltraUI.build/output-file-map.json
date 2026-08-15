@@ -1,0 +1,40 @@
+{
+  "": {
+    "swift-dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/primary.swiftdeps"
+  },
+  "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/Sources/UltraUI/Core/UPColor.swift": {
+    "dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPColor.d",
+    "object": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPColor.swift.o",
+    "swiftmodule": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPColor~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPColor.swiftdeps",
+    "diagnostics": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPColor.dia"
+  },
+  "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/Sources/UltraUI/Core/UPConfig.swift": {
+    "dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPConfig.d",
+    "object": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPConfig.swift.o",
+    "swiftmodule": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPConfig~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPConfig.swiftdeps",
+    "diagnostics": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPConfig.dia"
+  },
+  "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/Sources/UltraUI/Core/UPTheme.swift": {
+    "dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPTheme.d",
+    "object": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPTheme.swift.o",
+    "swiftmodule": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPTheme~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPTheme.swiftdeps",
+    "diagnostics": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPTheme.dia"
+  },
+  "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/Sources/UltraUI/Core/UPUnit.swift": {
+    "dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPUnit.d",
+    "object": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPUnit.swift.o",
+    "swiftmodule": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPUnit~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPUnit.swiftdeps",
+    "diagnostics": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UPUnit.dia"
+  },
+  "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/Sources/UltraUI/UltraUI.swift": {
+    "dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UltraUI.d",
+    "object": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UltraUI.swift.o",
+    "swiftmodule": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UltraUI~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UltraUI.swiftdeps",
+    "diagnostics": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUI.build/UltraUI.dia"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "": {
+    "swift-dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUITests.build/primary.swiftdeps"
+  },
+  "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/Tests/UltraUITests/CoreTests.swift": {
+    "dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUITests.build/CoreTests.d",
+    "object": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUITests.build/CoreTests.swift.o",
+    "swiftmodule": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUITests.build/CoreTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUITests.build/CoreTests.swiftdeps",
+    "diagnostics": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUITests.build/CoreTests.dia"
+  },
+  "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/Tests/UltraUITests/UltraUITests.swift": {
+    "dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUITests.build/UltraUITests.d",
+    "object": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUITests.build/UltraUITests.swift.o",
+    "swiftmodule": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUITests.build/UltraUITests~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUITests.build/UltraUITests.swiftdeps",
+    "diagnostics": "/Users/admin/Documents/Repos/xyito/open/ultra-ui-ios/UltraUI/.build/arm64-apple-macosx/debug/UltraUITests.build/UltraUITests.dia"
+  }
+}
