@@ -132,4 +132,14 @@ public enum UPConfig {
         public static let maxlength: Int? = nil
         public static let count = false
     }
+    public enum textarea {
+        public static let prop = ""
+        public static let placeholder = ""
+        public static let maxlength: Int? = nil
+        public static let count = false
+        public static let disabled = false
+        public static let readonly = false
+        public static let height: Double = 100
+        public static let autoHeight = false
+    }
 }
