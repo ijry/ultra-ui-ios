@@ -130,6 +130,32 @@ final class FormValidationTests: XCTestCase {
         XCTAssertNil(controller.errors["name"])
     }
 
+    func testNestedFormExampleValidatesAndWritesModel() {
+        let box = FormModelBox([
+            "account": .object(["email": .string(""), "password": .string("")]),
+            "bio": .string("")
+        ])
+        let controller = UPFormController()
+        let context = UPFormContext(
+            model: box.binding,
+            rules: [
+                "account.email": [UPFormRule(required: true, message: "请输入邮箱")],
+                "account.password": [UPFormRule(min: 6, message: "密码至少 6 位")]
+            ],
+            controller: controller
+        )
+        context.connectController()
+
+        context.set(.string("dev@example.com"), for: "account.email", trigger: "change")
+        context.set(.string("123456"), for: "account.password", trigger: "change")
+
+        XCTAssertTrue(controller.validate())
+        XCTAssertEqual(
+            UPFormValue.value(at: "account.email", in: box.model),
+            .string("dev@example.com")
+        )
+    }
+
     func testUnknownRuleTriggerRunsOnlyForExplicitValidation() {
         let box = FormModelBox(["name": .string("ab")])
         let controller = UPFormController()

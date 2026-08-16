@@ -11,6 +11,9 @@ uview-plus 的 SwiftUI 原生实现。项目提供可独立引用的 `UltraUI` S
 - `UPOverlay`
 - `UPIcon`：内置图标字体与标签
 - `UPLine`、`UPGap`、`UPLoadingIcon`
+- `UPForm`、`UPFormItem`：嵌套 `prop` 路径、规则校验、错误展示与控制器 API
+- `UPInput`：表单 / 直接绑定、密码、清除、字数统计、只读与禁用状态
+- `UPTextarea`：多行输入、自动高度、字数统计、只读与禁用状态
 
 ## 要求
 
@@ -72,6 +75,23 @@ UPModal(
     showCancelButton: true,
     onConfirm: { /* 处理确认 */ }
 )
+
+@State private var model: UPFormModel = [
+    "email": ""
+]
+@StateObject private var form = UPFormController()
+
+UPForm(
+    model: $model,
+    rules: ["email": [UPFormRule(required: true, message: "请输入邮箱")]],
+    controller: form
+) {
+    UPFormItem(label: "邮箱", prop: "email") {
+        UPInput(prop: "email", placeholder: "name@example.com", clearable: true)
+    }
+}
+
+UPTextarea(prop: "bio", placeholder: "介绍一下自己", maxlength: 200, count: true, autoHeight: true)
 ```
 
 ## 验证

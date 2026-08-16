@@ -13,6 +13,9 @@ struct HomeView: View {
                 NavigationLink("Modal") { ModalDemoView() }
                 NavigationLink("Toast") { ToastDemoView() }
             }
+            Section("表单") {
+                NavigationLink("Form") { FormDemoView() }
+            }
         }
         .navigationTitle("UltraUI Demo")
     }
