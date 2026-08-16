@@ -118,4 +118,18 @@ public enum UPConfig {
         public static let borderBottom = true
         public static let help = ""
     }
+    public enum input {
+        public static let prop = ""
+        public static let type = "text"
+        public static let placeholder = ""
+        public static let border = "surround"
+        public static let inputAlign = "left"
+        public static let clearable = false
+        public static let disabled = false
+        public static let readonly = false
+        public static let prefixIcon = ""
+        public static let suffixIcon = ""
+        public static let maxlength: Int? = nil
+        public static let count = false
+    }
 }

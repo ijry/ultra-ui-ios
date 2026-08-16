@@ -121,3 +121,14 @@ public final class UPFormContext: ObservableObject {
         controller.receive(errors: errors)
     }
 }
+
+private struct UPFormContextEnvironmentKey: EnvironmentKey {
+    static let defaultValue: UPFormContext? = nil
+}
+
+extension EnvironmentValues {
+    var upFormContext: UPFormContext? {
+        get { self[UPFormContextEnvironmentKey.self] }
+        set { self[UPFormContextEnvironmentKey.self] = newValue }
+    }
+}

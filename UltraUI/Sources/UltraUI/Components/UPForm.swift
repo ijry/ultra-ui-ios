@@ -36,6 +36,7 @@ public struct UPForm<Content: View>: View {
     public var body: some View {
         content()
             .environmentObject(context)
+            .environment(\.upFormContext, context)
             .onAppear {
                 synchronizeContext()
             }
