@@ -8,18 +8,40 @@ public final class UPFormContext: ObservableObject {
     public let controller: UPFormController
 
     @Published public private(set) var errors: [String: String] = [:]
+    @Published public private(set) var errorType: String
 
     public init(model: Binding<UPFormModel>,
                 rules: UPFormRules = [:],
-                controller: UPFormController) {
+                controller: UPFormController,
+                errorType: String = UPConfig.form.errorType) {
         self.model = model
         self.rules = rules
         self.controller = controller
+        self.errorType = Self.resolvedErrorType(errorType)
     }
 
     /// Connects this latest context to its controller without retaining it cyclically.
     public func connectController() {
         controller.connect(to: self)
+    }
+
+    /// Updates the bindings and presentation configuration retained by a stable form context.
+    public func update(model: Binding<UPFormModel>,
+                       rules: UPFormRules,
+                       errorType: String) {
+        self.model = model
+        self.rules = rules
+        self.errorType = Self.resolvedErrorType(errorType)
+
+        let retainedErrors = errors.filter { rules[$0.key] != nil }
+        if retainedErrors != errors {
+            errors = retainedErrors
+            mirrorErrorsToController()
+        }
+    }
+
+    static func resolvedErrorType(_ errorType: String) -> String {
+        errorType == "none" ? "none" : "message"
     }
 
     /// Resolves a uview-plus-style dotted property path from the bound model.

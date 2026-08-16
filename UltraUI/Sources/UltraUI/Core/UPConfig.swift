@@ -106,4 +106,16 @@ public enum UPConfig {
         public static let duration: Double = 1200
         public static let inactiveColor = ""
     }
+    public enum form {
+        public static let errorType = "message"
+    }
+    public enum formItem {
+        public static let label = ""
+        public static let prop = ""
+        public static let required = false
+        public static let labelPosition = "left"
+        public static let labelWidth = "90px"
+        public static let borderBottom = true
+        public static let help = ""
+    }
 }
