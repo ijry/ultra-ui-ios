@@ -2,6 +2,7 @@ import XCTest
 import SwiftUI
 @testable import UltraUI
 
+@MainActor
 final class PopupTests: XCTestCase {
     func testOverlayDefaults() {
         let o = UPOverlay()

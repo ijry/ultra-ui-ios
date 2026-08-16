@@ -1,6 +1,7 @@
 import XCTest
 @testable import UltraUI
 
+@MainActor
 final class BasicComponentsTests: XCTestCase {
     func testLineDefaults() {
         let line = UPLine()

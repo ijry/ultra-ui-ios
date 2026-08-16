@@ -187,6 +187,9 @@ public struct UPModal<CustomContent: View>: View {
     private var cancelButton: some View {
         Button {
             if asyncClose && loading {
+                if !asyncCloseTip.isEmpty {
+                    UPToast.show(message: asyncCloseTip, type: "default", position: "center")
+                }
                 onCancelOnAsync?()
             } else {
                 if !asyncCancelClose { show = false }

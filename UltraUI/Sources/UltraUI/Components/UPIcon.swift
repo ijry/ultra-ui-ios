@@ -40,7 +40,13 @@ public struct UPIcon: View {
     @Environment(\.upTheme) private var theme
 
     public var body: some View {
-        let glyph = UPIconMap.glyph(for: customPrefix.isEmpty ? name : "\(customPrefix)-\(name)")
+        let glyphKey: String
+        if customPrefix.isEmpty || name.hasPrefix("\(customPrefix)-") {
+            glyphKey = name
+        } else {
+            glyphKey = "\(customPrefix)-\(name)"
+        }
+        let glyph = UPIconMap.glyph(for: glyphKey)
         let fontSize = UPUnit.parse(size)
         return HStack(spacing: UPUnit.parse(space)) {
             if labelPos == "left" { labelView }
