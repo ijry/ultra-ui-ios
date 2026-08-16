@@ -9,6 +9,13 @@ final class BasicComponentsTests: XCTestCase {
         XCTAssertEqual(line.direction, "row")
         XCTAssertTrue(line.hairline)
     }
+    func testLineLengthParsing() {
+        XCTAssertEqual(UPLine.parsedLength("100%"), .fraction(1))
+        XCTAssertEqual(UPLine.parsedLength("50%"), .fraction(0.5))
+        XCTAssertEqual(UPLine.parsedLength("120px"), .points(120))
+        XCTAssertEqual(UPLine.parsedLength("650rpx"), .points(650))
+    }
+
     func testGapDefaults() {
         let gap = UPGap()
         XCTAssertEqual(gap.height, 20)

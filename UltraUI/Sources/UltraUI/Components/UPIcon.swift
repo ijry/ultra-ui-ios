@@ -1,6 +1,8 @@
 import SwiftUI
 
 public struct UPIcon: View {
+    public static let fontName = "iconfont"
+
     var name: String
     var color: String
     var size: String
@@ -51,7 +53,7 @@ public struct UPIcon: View {
         return HStack(spacing: UPUnit.parse(space)) {
             if labelPos == "left" { labelView }
             Text(glyph)
-                .font(.custom("uview-icon", size: fontSize))
+                .font(.custom(Self.fontName, size: fontSize))
                 .fontWeight(bold ? .bold : .regular)
                 .foregroundStyle(UPColor.parse(color, theme: theme))
             if labelPos == "right" { labelView }

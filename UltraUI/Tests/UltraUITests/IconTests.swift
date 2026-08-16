@@ -6,6 +6,10 @@ final class IconTests: XCTestCase {
         XCTAssertFalse(UPIconMap.glyph(for: "uicon-checkmark").isEmpty)
         XCTAssertEqual(UPIconMap.glyphs.count, 213)
     }
+    func testUsesBundledFontPostScriptName() {
+        XCTAssertEqual(UPIcon.fontName, "iconfont")
+    }
+
     func testUnknownGlyphEmpty() {
         XCTAssertEqual(UPIconMap.glyph(for: "uicon-nope"), "")
     }

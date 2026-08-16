@@ -19,11 +19,16 @@ public struct UPOverlay: View {
         self.onTap = onTap
     }
 
+    public static func allowsHitTesting(show: Bool) -> Bool {
+        show
+    }
+
     public var body: some View {
         Color.black
             .opacity(show ? opacity : 0)
             .ignoresSafeArea()
             .contentShape(Rectangle())
+            .allowsHitTesting(Self.allowsHitTesting(show: show))
             .onTapGesture { if show { onTap?() } }
             .animation(.easeInOut(duration: duration / 1000), value: show)
     }

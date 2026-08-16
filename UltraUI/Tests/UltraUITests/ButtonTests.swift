@@ -27,4 +27,14 @@ final class ButtonTests: XCTestCase {
         XCTAssertEqual(UPButton.fontSize(for: "small"), 14)
         XCTAssertEqual(UPButton.fontSize(for: "mini"), 12)
     }
+
+    func testOnClickModifierRegistersHandler() {
+        var callCount = 0
+        let button = UPButton().onClick {
+            callCount += 1
+        }
+
+        button.onClick?()
+        XCTAssertEqual(callCount, 1)
+    }
 }

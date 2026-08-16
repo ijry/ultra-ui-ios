@@ -60,13 +60,16 @@ public struct UPPopup<Content: View>: View {
 
     @Environment(\.upTheme) private var theme
 
+    public static func shouldRenderOverlay(show: Bool, overlay: Bool) -> Bool {
+        show && overlay
+    }
+
     public var body: some View {
         ZStack {
-            if overlay {
-                UPOverlay(show: show, zIndex: zIndex - 1, duration: duration, opacity: overlayOpacity) {
+            if Self.shouldRenderOverlay(show: show, overlay: overlay) {
+                UPOverlay(show: true, zIndex: zIndex - 1, duration: duration, opacity: overlayOpacity) {
                     if closeOnClickOverlay {
                         show = false
-                        onClose?()
                     }
                     onClickOverlay?()
                 }
@@ -120,7 +123,6 @@ public struct UPPopup<Content: View>: View {
                 if closeable {
                     Button {
                         show = false
-                        onClose?()
                     } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 14, weight: .medium))

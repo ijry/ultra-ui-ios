@@ -18,6 +18,7 @@ public struct UPButton: View {
     var block: Bool
     var throttleTime: Double
     var onTap: (() -> Void)?
+    var onClick: (() -> Void)?
 
     @State private var lastTap = Date.distantPast
     @Environment(\.upTheme) private var theme
@@ -38,7 +39,8 @@ public struct UPButton: View {
                 hairline: Bool = UPConfig.button.hairline,
                 block: Bool = UPConfig.button.block,
                 throttleTime: Double = UPConfig.button.throttleTime,
-                onTap: (() -> Void)? = nil) {
+                onTap: (() -> Void)? = nil,
+                onClick: (() -> Void)? = nil) {
         self.type = type
         self.size = size
         self.shape = shape
@@ -56,6 +58,7 @@ public struct UPButton: View {
         self.block = block
         self.throttleTime = throttleTime
         self.onTap = onTap
+        self.onClick = onClick
     }
 
     public static func height(for size: String) -> CGFloat {
@@ -170,6 +173,7 @@ public struct UPButton: View {
             lastTap = now
         }
         onTap?()
+        onClick?()
     }
 }
 
@@ -177,6 +181,13 @@ public extension UPButton {
     func onTap(_ action: @escaping () -> Void) -> UPButton {
         var copy = self
         copy.onTap = action
+        return copy
+    }
+
+    /// uview-plus compatible click event. It is invoked after `onTap` for each accepted tap.
+    func onClick(_ action: @escaping () -> Void) -> UPButton {
+        var copy = self
+        copy.onClick = action
         return copy
     }
 }
