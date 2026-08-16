@@ -1,6 +1,7 @@
 import XCTest
 @testable import UltraUI
 
+@MainActor
 final class IconTests: XCTestCase {
     func testGlyphExists() {
         XCTAssertFalse(UPIconMap.glyph(for: "uicon-checkmark").isEmpty)
