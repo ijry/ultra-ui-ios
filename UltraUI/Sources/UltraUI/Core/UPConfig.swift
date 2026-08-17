@@ -386,4 +386,19 @@ public enum UPConfig {
         public static let customStyle = UPStyle()
     }
 
+
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-divider`.
+    public enum divider {
+        public static let dashed = false
+        public static let hairline = true
+        public static let dot = false
+        public static let textPosition = "center"
+        public static let text = ""
+        public static let textSize: Double = 14
+        public static let textColor = "#909399"
+        public static let lineColor = "#dcdfe6"
+        public static let customClass = ""
+        public static let customStyle = UPStyle()
+    }
+
 }
