@@ -162,6 +162,51 @@ public enum UPConfig {
         public static let customStyle = UPStyle()
     }
 
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-radio`.
+    public enum radio {
+        public static let customClass = ""
+        public static let name: UPRadioName = ""
+        public static let shape = ""
+        public static let disabled: UPRadioFlag = ""
+        public static let labelDisabled: UPRadioFlag = ""
+        public static let activeColor = ""
+        public static let inactiveColor = ""
+        public static let iconSize = ""
+        public static let labelSize = ""
+        public static let label = ""
+        public static let size = ""
+        public static let color = ""
+        public static let labelColor = ""
+        public static let iconColor = ""
+        /// Present in the upstream default config even though it is inherited
+        /// from `u-radio-group` rather than declared as a radio prop.
+        public static let placement = ""
+        public static let customStyle = UPStyle()
+    }
+
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-radio-group`.
+    public enum radioGroup {
+        public static let customClass = ""
+        public static let value: UPRadioName = ""
+        public static let disabled = false
+        public static let shape = "circle"
+        public static let activeColor = "#2979ff"
+        public static let inactiveColor = "#c8c9cc"
+        public static let name = ""
+        public static let size = "18"
+        public static let placement = "row"
+        public static let label = ""
+        public static let labelColor = "#303133"
+        public static let labelSize = "14"
+        public static let labelDisabled = false
+        public static let iconColor = "#ffffff"
+        public static let iconSize = "12"
+        public static let borderBottom = false
+        public static let iconPlacement = "left"
+        public static let gap = "10px"
+        public static let customStyle = UPStyle()
+    }
+
     public enum gap {
         public static let bgColor = "transparent"
         public static let height: Double = 20
