@@ -428,4 +428,22 @@ public enum UPConfig {
         public static let customStyle = UPStyle()
     }
 
+
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-skeleton`.
+    public enum skeleton {
+        public static let loading = true
+        public static let animate = true
+        public static let rows = 0
+        public static let rowsWidth = "100%"
+        public static let rowsHeight = 18
+        public static let title = true
+        public static let titleWidth = "50%"
+        public static let titleHeight = 18
+        public static let avatar = false
+        public static let avatarSize = 32
+        public static let avatarShape = "circle"
+        public static let customClass = ""
+        public static let customStyle = UPStyle()
+    }
+
 }
