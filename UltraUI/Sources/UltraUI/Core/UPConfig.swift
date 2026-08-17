@@ -226,6 +226,38 @@ public enum UPConfig {
         public static let customStyle = UPStyle()
     }
 
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-number-box`.
+    public enum numberBox {
+        public static let customClass = ""
+        public static let name = ""
+        public static let value = UPNumberBoxValue.number(0)
+        public static let min: Double = 1
+        public static let max: Double = 9_007_199_254_740_991
+        public static let step: Double = 1
+        public static let integer = false
+        public static let disabled = false
+        public static let disabledInput = false
+        public static let asyncChange = false
+        public static let inputWidth: Double = 35
+        public static let showMinus = true
+        public static let showPlus = true
+        public static let decimalLength: Int? = nil
+        public static let longPress = true
+        public static let color = ""
+        public static let buttonWidth: Double = 30
+        public static let buttonSize: Double = 30
+        public static let buttonRadius = "0px"
+        public static let bgColor = ""
+        public static let disabledBgColor = ""
+        public static let inputBgColor = ""
+        public static let cursorSpacing: Double = 100
+        public static let disableMinus = false
+        public static let disablePlus = false
+        public static let iconStyle = UPStyle()
+        public static let miniMode = false
+        public static let customStyle = UPStyle()
+    }
+
     /// Defaults for the SwiftUI counterpart of uview-plus `u-switch`.
     public enum `switch` {
         public static let customClass = ""
