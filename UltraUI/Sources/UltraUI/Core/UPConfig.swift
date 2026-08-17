@@ -415,4 +415,17 @@ public enum UPConfig {
         public static let customStyle = UPStyle()
     }
 
+
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-line-progress`.
+    public enum lineProgress {
+        public static let activeColor = "#19be6b"
+        public static let inactiveColor = "#ececec"
+        public static let percentage = 0
+        public static let showText = true
+        public static let height = 12
+        public static let fromRight = false
+        public static let customClass = ""
+        public static let customStyle = UPStyle()
+    }
+
 }
