@@ -366,6 +366,34 @@ public enum UPConfig {
         public static let customStyle = UPStyle()
     }
 
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-tag`.
+    public enum tag {
+        public static let type = "primary"
+        public static let disabled = false
+        public static let size = "medium"
+        public static let shape = "square"
+        public static let text = ""
+        public static let bgColor = ""
+        public static let color = ""
+        public static let borderColor = ""
+        public static let closeColor = "#C6C7CB"
+        public static let name = ""
+        public static let plainFill = false
+        public static let plain = false
+        public static let closable = false
+        public static let show = true
+        public static let icon = ""
+        public static let iconColor = ""
+        public static let textSize = ""
+        public static let height = ""
+        public static let padding = ""
+        public static let borderRadius = ""
+        public static let autoBgColor: Double = 0
+        public static let customClass = ""
+        public static let customStyle = UPStyle()
+    }
+
+
     /// Defaults for the SwiftUI counterpart of uview-plus `u-badge`.
     public enum badge {
         public static let isDot = false
