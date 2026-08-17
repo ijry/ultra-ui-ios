@@ -474,4 +474,28 @@ public enum UPConfig {
         public static let customStyle = UPStyle()
     }
 
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-loadmore`.
+    public enum loadmore {
+        public static let status = "loadmore"
+        public static let bgColor = "transparent"
+        public static let icon = true
+        public static let fontSize = 14
+        public static let iconSize = 17
+        public static let color = "#606266"
+        public static let loadingIcon = "spinner"
+        public static let loadmoreText = "加载更多"
+        public static let loadingText = "正在加载..."
+        public static let nomoreText = "没有更多了"
+        public static let isDot = false
+        public static let iconColor = "#b7b7b7"
+        public static let marginTop = 10
+        public static let marginBottom = 10
+        public static let height = "auto"
+        public static let line = false
+        public static let lineColor = "#E6E8EB"
+        public static let dashed = false
+        public static let customClass = ""
+        public static let customStyle = UPStyle()
+    }
+
 }
