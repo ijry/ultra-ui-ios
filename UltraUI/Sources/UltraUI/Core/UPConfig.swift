@@ -527,4 +527,17 @@ public enum UPConfig {
         public static let customStyle = UPStyle()
     }
 
+
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-code`.
+    public enum code {
+        public static let seconds = 60
+        public static let startText = "获取验证码"
+        public static let changeText = "X秒重新获取"
+        public static let endText = "重新获取"
+        public static let keepRunning = false
+        public static let uniqueKey = ""
+        public static let customClass = ""
+        public static let customStyle = UPStyle()
+    }
+
 }
