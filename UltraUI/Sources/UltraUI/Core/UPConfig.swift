@@ -401,4 +401,18 @@ public enum UPConfig {
         public static let customStyle = UPStyle()
     }
 
+
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-link`.
+    public enum link {
+        public static let color = "#2979ff"
+        public static let fontSize: Double = 15
+        public static let underLine = false
+        public static let href = ""
+        public static let mpTips = "链接已复制，请在浏览器打开"
+        public static let lineColor = ""
+        public static let text = ""
+        public static let customClass = ""
+        public static let customStyle = UPStyle()
+    }
+
 }
