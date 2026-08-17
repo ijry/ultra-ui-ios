@@ -88,6 +88,80 @@ public enum UPConfig {
         public static let margin: Double = 0
         public static let dashed = false
     }
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-cell`.
+    public enum cell {
+        public static let customClass = ""
+        public static let title = ""
+        public static let label = ""
+        public static let value = ""
+        public static let icon = ""
+        public static let disabled = false
+        public static let border = true
+        public static let center = false
+        public static let url = ""
+        public static let linkType = "navigateTo"
+        public static let clickable = false
+        public static let isLink = false
+        public static let required = false
+        public static let rightIcon = "arrow-right"
+        public static let arrowDirection = ""
+        public static let iconStyle = UPStyle()
+        public static let rightIconStyle = UPStyle()
+        public static let titleStyle = UPStyle()
+        public static let size = ""
+        public static let stop = true
+        public static let name: UPCellName = ""
+    }
+
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-cell-group`.
+    public enum cellGroup {
+        public static let customClass = ""
+        public static let title = ""
+        public static let border = true
+        public static let customStyle = UPStyle()
+    }
+
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-checkbox`.
+    public enum checkbox {
+        public static let customClass = ""
+        public static let name: UPCheckboxName = ""
+        public static let shape = ""
+        public static let size = ""
+        public static let checked = false
+        public static let disabled: UPCheckboxFlag = ""
+        public static let activeColor = ""
+        public static let inactiveColor = ""
+        public static let iconSize = ""
+        public static let iconColor = ""
+        public static let label = ""
+        public static let labelSize = ""
+        public static let labelColor = ""
+        public static let labelDisabled: UPCheckboxFlag = ""
+        public static let usedAlone = false
+        public static let customStyle = UPStyle()
+    }
+
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-checkbox-group`.
+    public enum checkboxGroup {
+        public static let customClass = ""
+        public static let name = ""
+        public static let value: [UPCheckboxName] = []
+        public static let shape = "square"
+        public static let disabled = false
+        public static let activeColor = "#2979ff"
+        public static let inactiveColor = "#c8c9cc"
+        public static let size = "18"
+        public static let placement = "row"
+        public static let labelSize = "14"
+        public static let labelColor = "#303133"
+        public static let labelDisabled = false
+        public static let iconColor = "#ffffff"
+        public static let iconSize = "12"
+        public static let iconPlacement = "left"
+        public static let borderBottom = false
+        public static let customStyle = UPStyle()
+    }
+
     public enum gap {
         public static let bgColor = "transparent"
         public static let height: Double = 20
