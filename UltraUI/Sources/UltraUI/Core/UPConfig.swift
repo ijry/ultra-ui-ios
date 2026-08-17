@@ -509,4 +509,22 @@ public enum UPConfig {
         public static let customStyle = UPStyle()
     }
 
+
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-count-to`.
+    public enum countTo {
+        public static let startVal = 0
+        public static let endVal = 0
+        public static let duration = 2000
+        public static let autoplay = true
+        public static let decimals = 0
+        public static let useEasing = true
+        public static let decimal = "."
+        public static let color = "#606266"
+        public static let fontSize = 22
+        public static let bold = false
+        public static let separator = ""
+        public static let customClass = ""
+        public static let customStyle = UPStyle()
+    }
+
 }
