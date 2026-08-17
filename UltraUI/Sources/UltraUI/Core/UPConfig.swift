@@ -207,6 +207,24 @@ public enum UPConfig {
         public static let customStyle = UPStyle()
     }
 
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-switch`.
+    public enum `switch` {
+        public static let customClass = ""
+        public static let loading = false
+        public static let disabled = false
+        public static let size: Double = 25
+        public static let activeColor = "#2979ff"
+        public static let inactiveColor = "#ffffff"
+        public static let dotActiveColor = "#ffffff"
+        public static let dotInactiveColor = "#ffffff"
+        public static let value: UPSwitchValue = false
+        public static let activeValue: UPSwitchValue = true
+        public static let inactiveValue: UPSwitchValue = false
+        public static let asyncChange = false
+        public static let space: Double = 0
+        public static let customStyle = UPStyle()
+    }
+
     public enum gap {
         public static let bgColor = "transparent"
         public static let height: Double = 20
