@@ -330,4 +330,39 @@ public enum UPConfig {
         public static let height: Double = 100
         public static let autoHeight = false
     }
+
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-avatar`.
+    public enum avatar {
+        public static let src = ""
+        public static let shape = "circle"
+        public static let size: Double = 40
+        public static let mode = "scaleToFill"
+        public static let text = ""
+        public static let bgColor = "#c0c4cc"
+        public static let color = "#ffffff"
+        public static let fontSize: Double = 18
+        public static let icon = ""
+        public static let mpAvatar = false
+        public static let randomBgColor = false
+        public static let defaultUrl = ""
+        public static let colorIndex = ""
+        public static let name = ""
+        public static let customClass = ""
+        public static let customStyle = UPStyle()
+    }
+
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-avatar-group`.
+    public enum avatarGroup {
+        public static let urls: [UPAvatarGroupItem] = []
+        public static let maxCount = 5
+        public static let shape = "circle"
+        public static let mode = "scaleToFill"
+        public static let showMore = true
+        public static let size: Double = 40
+        public static let keyName = ""
+        public static let gap: Double = 0.5
+        public static let extraValue = 0
+        public static let customClass = ""
+        public static let customStyle = UPStyle()
+    }
 }
