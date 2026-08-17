@@ -540,4 +540,25 @@ public enum UPConfig {
         public static let customStyle = UPStyle()
     }
 
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-code-input`.
+    public enum codeInput {
+        public static let adjustPosition = true
+        public static let maxlength = 6
+        public static let dot = false
+        public static let mode = "box"
+        public static let hairline = false
+        public static let space: Double = 10
+        public static let value = ""
+        public static let focus = false
+        public static let bold = false
+        public static let color = "#606266"
+        public static let fontSize: Double = 18
+        public static let size: Double = 35
+        public static let disabledKeyboard = false
+        public static let borderColor = "#c9cacc"
+        public static let disabledDot = true
+        public static let customClass = ""
+        public static let customStyle = UPStyle()
+    }
+
 }
