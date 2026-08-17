@@ -365,4 +365,25 @@ public enum UPConfig {
         public static let customClass = ""
         public static let customStyle = UPStyle()
     }
+
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-badge`.
+    public enum badge {
+        public static let isDot = false
+        public static let value = ""
+        public static let modelValue: String? = nil
+        public static let show = true
+        public static let max = 999
+        public static let type = "error"
+        public static let showZero = false
+        public static let bgColor: String? = nil
+        public static let color: String? = nil
+        public static let shape = "circle"
+        public static let numberType = "overflow"
+        public static let offset: [CGFloat] = []
+        public static let inverted = false
+        public static let absolute = false
+        public static let customClass = ""
+        public static let customStyle = UPStyle()
+    }
+
 }
