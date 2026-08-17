@@ -207,6 +207,25 @@ public enum UPConfig {
         public static let customStyle = UPStyle()
     }
 
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-rate`.
+    public enum rate {
+        public static let customClass = ""
+        public static let value: Double = 1
+        public static let count: Double = 5
+        public static let disabled = false
+        public static let readonly = false
+        public static let size: Double = 18
+        public static let inactiveColor = ""
+        public static let activeColor = ""
+        public static let gutter: Double = 4
+        public static let minCount: Double = 1
+        public static let allowHalf = false
+        public static let activeIcon = "star-fill"
+        public static let inactiveIcon = "star"
+        public static let touchable = true
+        public static let customStyle = UPStyle()
+    }
+
     /// Defaults for the SwiftUI counterpart of uview-plus `u-switch`.
     public enum `switch` {
         public static let customClass = ""
