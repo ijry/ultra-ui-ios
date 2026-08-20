@@ -1,20 +1,20 @@
 # uview-plus SwiftUI 复刻进度
 
-> 最后更新：2026-08-20
+> 最后更新：2026-08-21
 > 上游基线：uview-plus `3.8.86`，以 `components/u-*` 目录为完整清单
-> iOS 基线：`main` / `228cacb`
+> iOS 基线：`main` / `ea0cc68`
 
 ## 总览
 
 | 指标 | 数量 | 说明 |
 | --- | ---: | --- |
 | 上游组件目录 | 138 | 包括公开组件、配套子组件和内部辅助组件 |
-| 已完成 | 40 | 已提交，具备对应 SwiftUI 类型和测试基线 |
+| 已完成 | 44 | 已提交，具备对应 SwiftUI 类型和测试基线 |
 | 兼容增强中 | 11 | 已有已提交基线，当前工作区还有未提交的接口兼容增强 |
-| 开发中 | 4 | 当前工作区已有未提交实现和测试，尚未纳入提交基线 |
+| 开发中 | 0 | 当前没有处于开发中的组件 |
 | 待开始 | 83 | 尚无对应 SwiftUI 组件实现 |
 | 已有实现覆盖 | 55 / 138 | `已完成 + 兼容增强中 + 开发中`，约 39.9% |
-| 已提交覆盖 | 51 / 138 | `已完成 + 兼容增强中` 均已有已提交基线，约 37.0% |
+| 已提交覆盖 | 55 / 138 | `已完成 + 兼容增强中` 均已有已提交基线，约 39.9% |
 
 ## 状态口径
 
@@ -47,7 +47,7 @@
 | 14 | `u-calendar-strip` | `UPCalendarStrip` | ⬜ 待开始 | 未评估 | 横向日历条 |
 | 15 | `u-canvas` | `UPCanvas` | ⬜ 待开始 | 未评估 | 需映射 SwiftUI Canvas / Core Graphics |
 | 16 | `u-car-keyboard` | `UPCarKeyboard` | ⬜ 待开始 | 未评估 | 车牌键盘 |
-| 17 | `u-card` | `UPCard` | 🚧 开发中 | 待验证 | 工作区已有未提交组件与测试 |
+| 17 | `u-card` | `UPCard` | ✅ 已完成 | 高 | props、String/Number 单位、三类 named slot、index 和四类点击事件已覆盖 |
 | 18 | `u-cascader` | `UPCascader` | ⬜ 待开始 | 未评估 | 级联选择器 |
 | 19 | `u-cate-tab` | `UPCateTab` | ⬜ 待开始 | 未评估 | 分类导航业务组件 |
 | 20 | `u-cell` | `UPCell` | ✅ 已完成 | 高 | props、name payload、事件和插槽已覆盖 |
@@ -74,7 +74,7 @@
 | 41 | `u-dragsort` | `UPDragsort` | ⬜ 待开始 | 未评估 | 拖拽排序与事件 payload |
 | 42 | `u-dropdown` | `UPDropdown` | ⬜ 待开始 | 未评估 | 与 `UPDropdownItem` 配套 |
 | 43 | `u-dropdown-item` | `UPDropdownItem` | ⬜ 待开始 | 未评估 | 下拉菜单子项 |
-| 44 | `u-empty` | `UPEmpty` | 🚧 开发中 | 待验证 | 工作区已有未提交组件与测试 |
+| 44 | `u-empty` | `UPEmpty` | ✅ 已完成 | 高 | mode 文案/icon 映射、图片 icon、默认 slot、String/Number 单位和 show 已覆盖 |
 | 45 | `u-float-button` | `UPFloatButton` | ⬜ 待开始 | 未评估 | 悬浮按钮、展开菜单和 item-click |
 | 46 | `u-form` | `UPForm` | 🔄 兼容增强中 | 基线可用 | 已有表单模型/校验；当前有未提交规则和上下文增强 |
 | 47 | `u-form-item` | `UPFormItem` | 🔄 兼容增强中 | 基线可用 | 已有布局与错误状态；当前有未提交 props/插槽增强 |
@@ -84,7 +84,7 @@
 | 51 | `u-grid-item` | `UPGridItem` | ✅ 已完成 | 高 | name/index payload、item click 和插槽已覆盖 |
 | 52 | `u-guide` | `UPGuide` | ⬜ 待开始 | 未评估 | 引导遮罩与步骤定位 |
 | 53 | `u-icon` | `UPIcon` | 🔄 兼容增强中 | 基线可用 | 字体图标与图片模式已有；当前有未提交 props/事件增强 |
-| 54 | `u-image` | `UPImage` | 🚧 开发中 | 待验证 | 工作区已有未提交组件与测试 |
+| 54 | `u-image` | `UPImage` | ✅ 已完成 | 高 | 原生 AsyncImage、loading/error slot、尺寸/圆角、占位显示和 click/load/error 已覆盖 |
 | 55 | `u-index-anchor` | `UPIndexAnchor` | ⬜ 待开始 | 未评估 | 与索引列表配套 |
 | 56 | `u-index-item` | `UPIndexItem` | ⬜ 待开始 | 未评估 | 与索引列表配套 |
 | 57 | `u-index-list` | `UPIndexList` | ⬜ 待开始 | 未评估 | 索引定位和滚动联动 |
@@ -155,7 +155,7 @@
 | 122 | `u-tabs-item` | `UPTabsItem` | ⬜ 待开始 | 未评估 | tabs 子项与父子上下文 |
 | 123 | `u-tag` | `UPTag` | ✅ 已完成 | 高 | props、click/close payload、图标及内容插槽已覆盖 |
 | 124 | `u-td` | `UPTd` | ⬜ 待开始 | 未评估 | 旧版表格单元格 |
-| 125 | `u-text` | `UPText` | 🚧 开发中 | 待验证 | 工作区已有未提交组件与测试 |
+| 125 | `u-text` | `UPText` | ✅ 已完成 | 高 | mode/formatter、String/Number 属性、图标、行数/样式、link/phone 元数据和 click 已覆盖 |
 | 126 | `u-textarea` | `UPTextarea` | 🔄 兼容增强中 | 基线可用 | 原生 TextEditor 基线已有；当前有未提交 props/事件增强 |
 | 127 | `u-th` | `UPTh` | ⬜ 待开始 | 未评估 | 旧版表格表头单元格 |
 | 128 | `u-title` | `UPTitle` | ✅ 已完成 | 高 | 标题模式、颜色、尺寸和样式已覆盖 |
