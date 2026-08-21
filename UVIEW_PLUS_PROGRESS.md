@@ -2,7 +2,7 @@
 
 > 最后更新：2026-08-21
 > 上游基线：uview-plus `3.8.86`，以 `components/u-*` 目录为完整清单
-> iOS 基线：`main` / `e26fc1e`
+> iOS 基线：`main` / `3d5706f`
 
 ## 总览
 
@@ -138,8 +138,8 @@
 | 105 | `u-skeleton` | `UPSkeleton` | ✅ 已完成 | 高 | rows/title/avatar、尺寸数组、loading 插槽已覆盖 |
 | 106 | `u-slider` | `UPSlider` | ✅ 已完成 | 中高 | String/Number、单值/区间 Binding、step 归一化及 start/changing/change 区间 payload 已覆盖（`e26fc1e`） |
 | 107 | `u-status-bar` | `UPStatusBar` | ✅ 已完成 | 基线可用 | 可映射 safe area 顶部 inset |
-| 108 | `u-steps` | `UPSteps` | ✅ 已完成 | 基线可用 | 与 steps-item 配套 |
-| 109 | `u-steps-item` | `UPStepsItem` | ✅ 已完成 | 基线可用 | 步骤子项与父子上下文 |
+| 108 | `u-steps` | `UPSteps` | ✅ 已完成 | 中高 | 支持 String/Number current、安全归一化、方向和步骤状态解析；与 steps-item 配套 |
+| 109 | `u-steps-item` | `UPStepsItem` | ✅ 已完成 | 中高 | title/desc/iconSize/error/itemStyle、slot 和 click 已覆盖 |
 | 110 | `u-sticky` | `UPSticky` | ✅ 已完成 | 基线可用 | SwiftUI pinned views 与上游 offset 语义适配 |
 | 111 | `u-subsection` | `UPSubsection` | ✅ 已完成 | 中高 | current Binding、禁用/去重、公开选中索引及结构化 change payload 已覆盖（`e26fc1e`） |
 | 112 | `u-swipe-action` | `UPSwipeAction` | ✅ 已完成 | 基线可用 | 与 swipe-action-item 配套及互斥状态 |
@@ -147,12 +147,12 @@
 | 114 | `u-swiper` | `UPSwiper` | ✅ 已完成 | 中高 | current Binding/currentItemId、原生 TabView 回写、change/click payload 和循环导航已覆盖；平台动画细节采用原生语义（`e26fc1e`） |
 | 115 | `u-swiper-indicator` | `UPSwiperIndicator` | ✅ 已完成 | 基线可用 | Swiper 指示器辅助组件 |
 | 116 | `u-switch` | `UPSwitch` | ✅ 已完成 | 高 | active/inactive value、loading/disabled、change 已覆盖 |
-| 117 | `u-tabbar` | `UPTabbar` | ✅ 已完成 | 基线可用 | 与 tabbar-item 配套，需原生安全区处理 |
-| 118 | `u-tabbar-item` | `UPTabbarItem` | ✅ 已完成 | 基线可用 | tabbar 子项、badge、事件 payload |
+| 117 | `u-tabbar` | `UPTabbar` | ✅ 已完成 | 中高 | 支持 Binding/无控 String value、结构化 change payload、图标/样式/安全区；与 tabbar-item 配套 |
+| 118 | `u-tabbar-item` | `UPTabbarItem` | ✅ 已完成 | 中高 | tabbar 子项、badge、active/inactive icon、事件 payload |
 | 119 | `u-table` | `UPTable` | ✅ 已完成 | 基线可用 | 旧版表格组件族，与 tr/th/td 配套 |
 | 120 | `u-table2` | `UPTable2` | ✅ 已完成 | 基线可用 | 新版表格，含内部 tableRow |
-| 121 | `u-tabs` | `UPTabs` | ✅ 已完成 | 基线可用 | 与 tabs-item 配套、滚动指示器和 change/click |
-| 122 | `u-tabs-item` | `UPTabsItem` | ✅ 已完成 | 基线可用 | tabs 子项与父子上下文 |
+| 121 | `u-tabs` | `UPTabs` | ✅ 已完成 | 中高 | 支持 String 列表/Int Binding、无控选中状态、disabled/click/change、滚动指示器；与 tabs-item 配套 |
+| 122 | `u-tabs-item` | `UPTabsItem` | ✅ 已完成 | 中高 | name/badge/icon/disabled 元数据与父子选择上下文已覆盖 |
 | 123 | `u-tag` | `UPTag` | ✅ 已完成 | 高 | props、click/close payload、图标及内容插槽已覆盖 |
 | 124 | `u-td` | `UPTd` | ✅ 已完成 | 基线可用 | 旧版表格单元格 |
 | 125 | `u-text` | `UPText` | ✅ 已完成 | 高 | mode/formatter、String/Number 属性、图标、行数/样式、link/phone 元数据和 click 已覆盖 |
