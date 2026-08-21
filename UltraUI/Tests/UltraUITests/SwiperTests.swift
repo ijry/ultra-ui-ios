@@ -19,6 +19,39 @@ import XCTest
         XCTAssertEqual(current, 1); XCTAssertEqual(changes, [1]); XCTAssertEqual(clicked, [1]); XCTAssertEqual(swiper.nextIndex(from: 1), 0)
     }
 
+    func testSwiperSelectionBindingEmitsUserChangePayloadAndSuppressesDuplicates() {
+        var current = 0
+        let items = [UPSwiperItem(id: "a", source: "a"), UPSwiperItem(id: "b", source: "b")]
+        var changes: [UPSwiperChange] = []
+        let swiper = UPSwiper(list: items, current: Binding(get: { current }, set: { current = $0 }))
+            .onChangePayload { changes.append($0) }
+
+        swiper.selectionBinding.wrappedValue = 1
+        swiper.selectionBinding.wrappedValue = 1
+
+        XCTAssertEqual(current, 1)
+        XCTAssertEqual(changes, [UPSwiperChange(index: 1, item: items[1], source: .user)])
+    }
+
+    func testSwiperCurrentItemIdAndNavigationResolveValidItems() {
+        let items = [UPSwiperItem(id: "a", source: "a"), UPSwiperItem(id: "b", source: "b")]
+        let swiper = UPSwiper(list: items, current: 0, currentItemId: "b", circular: true)
+
+        XCTAssertEqual(swiper.selectedIndex, 1)
+        XCTAssertEqual(swiper.previousIndex(from: 0), 1)
+    }
+
+    func testSwiperIgnoresInvalidClickIndexes() {
+        var clicked: [Int] = []
+        let swiper = UPSwiper(list: ["a", "b"]).onClick { clicked.append($0) }
+
+        swiper.triggerClick(-1)
+        swiper.triggerClick(2)
+        swiper.triggerClick(1)
+
+        XCTAssertEqual(clicked, [1])
+    }
+
     func testSwiperIndicatorGeometryAndClamping() {
         let indicator = UPSwiperIndicator(length: "4", current: "9", indicatorActiveColor: "#fff", indicatorInactiveColor: "#888")
         XCTAssertEqual(indicator.resolvedLength, 4); XCTAssertEqual(indicator.resolvedCurrent, 3); XCTAssertEqual(indicator.lineOffset, 66); XCTAssertEqual(indicator.indicatorMode, "line")

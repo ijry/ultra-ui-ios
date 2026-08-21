@@ -44,6 +44,35 @@ final class SliderTests: XCTestCase {
         XCTAssertEqual(box.value, UPSliderRangeValue(lower: 6, upper: 8))
     }
 
+    func testRangeEmitsStructuredChangingAndChangePayloads() {
+        let box = SliderBox(UPSliderRangeValue(lower: 2, upper: 8))
+        var changing: [UPSliderRangeValue] = []
+        var changes: [UPSliderRangeValue] = []
+        let slider = UPSlider(rangeValue: box.binding, min: 0, max: 10, step: 2)
+            .onRangeChanging { changing.append($0) }
+            .onRangeChange { changes.append($0) }
+
+        slider.changeLower(to: 9)
+        slider.endRangeInteraction()
+
+        XCTAssertEqual(changing, [.init(lower: 6, upper: 8)])
+        XCTAssertEqual(changes, [.init(lower: 6, upper: 8)])
+    }
+
+    func testDisabledRangeSuppressesStructuredEvents() {
+        let box = SliderBox(UPSliderRangeValue(lower: 2, upper: 8))
+        var eventCount = 0
+        let slider = UPSlider(rangeValue: box.binding, min: 0, max: 10, step: 2, disabled: true)
+            .onRangeChanging { _ in eventCount += 1 }
+            .onRangeChange { _ in eventCount += 1 }
+
+        slider.changeUpper(to: 10)
+        slider.endRangeInteraction()
+
+        XCTAssertEqual(box.value, .init(lower: 2, upper: 8))
+        XCTAssertEqual(eventCount, 0)
+    }
+
     func testStringAndIntegerBindingsPreserveUpstreamNumberCompatibility() {
         let stringBox = SliderBox("0")
         let integerBox = SliderBox(0)

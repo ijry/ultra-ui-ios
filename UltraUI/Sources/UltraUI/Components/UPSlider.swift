@@ -70,6 +70,8 @@ public struct UPSlider: View {
     private var onStartHandler: (() -> Void)?
     private var onChangingHandler: ((Double) -> Void)?
     private var onChangeHandler: ((Double) -> Void)?
+    private var onRangeChangingHandler: ((UPSliderRangeValue) -> Void)?
+    private var onRangeChangeHandler: ((UPSliderRangeValue) -> Void)?
 
     public init<Value: UPSliderValueInput, Block: UPSliderValueInput, Min: UPSliderValueInput, Max: UPSliderValueInput, Step: UPSliderValueInput>(
         value: Value = 0, blockSize: Block = 18, min: Min = 0, max: Max = 100, step: Step = 1,
@@ -156,7 +158,10 @@ public struct UPSlider: View {
 
     @ViewBuilder private var singleBody: some View {
         Slider(value: Binding(get: { currentValue }, set: { updateValue($0, changing: true) }),
-               in: lowerBound...upperBound, step: normalizedStep)
+               in: lowerBound...upperBound, step: normalizedStep,
+               onEditingChanged: { editing in
+                   if editing { startInteraction() } else { endInteraction() }
+               })
             .tint(UPColor.parse(activeColor))
             .disabled(disabled)
             .rotationEffect(vertical ? .degrees(-90) : .zero)
@@ -166,9 +171,15 @@ public struct UPSlider: View {
     @ViewBuilder private var rangeBody: some View {
         HStack(spacing: 0) {
             Slider(value: Binding(get: { currentRange.lower }, set: { changeLower(to: $0) }),
-                   in: lowerBound...upperBound, step: normalizedStep)
+                   in: lowerBound...upperBound, step: normalizedStep,
+                   onEditingChanged: { editing in
+                       if editing { startInteraction() } else { endRangeInteraction() }
+                   })
             Slider(value: Binding(get: { currentRange.upper }, set: { changeUpper(to: $0) }),
-                   in: lowerBound...upperBound, step: normalizedStep)
+                   in: lowerBound...upperBound, step: normalizedStep,
+                   onEditingChanged: { editing in
+                       if editing { startInteraction() } else { endRangeInteraction() }
+                   })
         }
         .tint(UPColor.parse(activeColor))
         .disabled(disabled)
@@ -177,10 +188,13 @@ public struct UPSlider: View {
     public func onStart(_ action: @escaping () -> Void) -> Self { var c = self; c.onStartHandler = action; return c }
     public func onChanging(_ action: @escaping (Double) -> Void) -> Self { var c = self; c.onChangingHandler = action; return c }
     public func onChange(_ action: @escaping (Double) -> Void) -> Self { var c = self; c.onChangeHandler = action; return c }
+    public func onRangeChanging(_ action: @escaping (UPSliderRangeValue) -> Void) -> Self { var c = self; c.onRangeChangingHandler = action; return c }
+    public func onRangeChange(_ action: @escaping (UPSliderRangeValue) -> Void) -> Self { var c = self; c.onRangeChangeHandler = action; return c }
 
     public func startInteraction() { guard !disabled else { return }; onStartHandler?() }
     public func changeInteraction(to value: Double) { guard !disabled else { return }; updateValue(value, changing: true) }
     public func endInteraction() { guard !disabled else { return }; onChangeHandler?(currentValue) }
+    public func endRangeInteraction() { guard !disabled else { return }; onRangeChangeHandler?(currentRange) }
     public func changeLower(to value: Double) { updateRange(lower: value, upper: nil) }
     public func changeUpper(to value: Double) { updateRange(lower: nil, upper: value) }
 
@@ -199,7 +213,7 @@ public struct UPSlider: View {
     private func updateValue(_ raw: Double, changing: Bool) {
         let normalized = normalize(raw)
         if let valueBinding { valueBinding.wrappedValue = normalized }
-        onChangingHandler?(normalized)
+        if changing { onChangingHandler?(normalized) }
     }
 
     private func updateRange(lower: Double?, upper: Double?) {
@@ -217,6 +231,7 @@ public struct UPSlider: View {
         result.upper = Swift.min(upperBound, result.upper)
         rangeBinding?.wrappedValue = result
         onChangingHandler?(lower ?? upper ?? result.lower)
+        onRangeChangingHandler?(result)
     }
 
     private func format(_ value: Double) -> String { value.rounded() == value ? String(Int(value)) : String(value) }

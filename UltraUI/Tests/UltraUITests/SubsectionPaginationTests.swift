@@ -29,6 +29,21 @@ final class SubsectionPaginationTests: XCTestCase {
         XCTAssertEqual(emitted, 0)
     }
 
+    func testSubsectionSelectedIndexTracksBindingAndEmitsPayload() {
+        let box = IntBox(0)
+        let items = [UPSubsectionItem(id: "first", name: "A"), UPSubsectionItem(id: "second", name: "B")]
+        var change: UPSubsectionChange?
+        let subsection = UPSubsection(list: items, current: box.binding)
+            .onChangePayload { change = $0 }
+
+        box.value = 1
+        XCTAssertEqual(subsection.selectedIndex, 1)
+
+        box.value = 0
+        subsection.select(1)
+        XCTAssertEqual(change, UPSubsectionChange(index: 1, item: items[1]))
+    }
+
     func testSubsectionAcceptsUncontrolledCurrentProp() {
         let subsection = UPSubsection(list: ["A", "B"], current: 1)
 

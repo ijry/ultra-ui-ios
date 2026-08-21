@@ -14,6 +14,16 @@ public struct UPSubsectionItem: Identifiable, Equatable, Sendable {
     }
 }
 
+public struct UPSubsectionChange: Equatable, Sendable {
+    public var index: Int
+    public var item: UPSubsectionItem
+
+    public init(index: Int, item: UPSubsectionItem) {
+        self.index = index
+        self.item = item
+    }
+}
+
 /// Native segmented control corresponding to uview-plus `u-subsection`.
 @MainActor
 public struct UPSubsection: View {
@@ -33,6 +43,7 @@ public struct UPSubsection: View {
 
     private var currentBinding: Binding<Int>?
     private var onChangeHandler: ((Int) -> Void)?
+    private var onChangePayloadHandler: ((UPSubsectionChange) -> Void)?
 
     public init(
         list: [String] = [], current: Binding<Int>? = nil,
@@ -135,13 +146,20 @@ public struct UPSubsection: View {
         return copy
     }
 
+    public func onChangePayload(_ action: @escaping (UPSubsectionChange) -> Void) -> Self {
+        var copy = self
+        copy.onChangePayloadHandler = action
+        return copy
+    }
+
     public func select(_ index: Int) {
         guard !disabled, list.indices.contains(index), index != selectedIndex else { return }
         currentBinding?.wrappedValue = index
         onChangeHandler?(index)
+        onChangePayloadHandler?(UPSubsectionChange(index: index, item: list[index]))
     }
 
-    private var selectedIndex: Int {
+    public var selectedIndex: Int {
         let raw = currentBinding?.wrappedValue ?? current
         guard !list.isEmpty else { return 0 }
         return Swift.min(Swift.max(raw, 0), list.count - 1)
