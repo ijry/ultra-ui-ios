@@ -2,7 +2,7 @@
 
 > 最后更新：2026-08-21
 > 上游基线：uview-plus `3.8.86`，以 `components/u-*` 目录为完整清单
-> iOS 基线：`main` / `cbb2af5`
+> iOS 基线：`main` / `94d6766`
 
 ## 总览
 
@@ -43,13 +43,13 @@
 | 10 | `u-barcode` | `UPBarcode` | ✅ 已完成 | 基线可用 | 已采用 Core Image Code 128 生成 |
 | 11 | `u-box` | `UPBox` | ✅ 已完成 | 高 | 三区域布局、默认值、颜色及 named slots 已覆盖 |
 | 12 | `u-button` | `UPButton` | ✅ 已完成 | 基线可用 | 已有原生 Button 封装；props/事件兼容基线已提交 |
-| 13 | `u-calendar` | `UPCalendar` | ✅ 已完成 | 基线可用 | 复杂日期状态与多选范围 |
-| 14 | `u-calendar-strip` | `UPCalendarStrip` | ✅ 已完成 | 基线可用 | 横向日历条 |
+| 13 | `u-calendar` | `UPCalendar` | ✅ 已完成 | 中高 | single/multiple/range、日期 Binding、边界/只读/maxCount、select/confirm/close 已覆盖 |
+| 14 | `u-calendar-strip` | `UPCalendarStrip` | ✅ 已完成 | 中高 | modelValue/current Binding、只读/禁用日期及结构化 change payload 已覆盖 |
 | 15 | `u-canvas` | `UPCanvas` | ✅ 已完成 | 基线可用 | 已采用 SwiftUI Canvas 命令模型 |
 | 16 | `u-car-keyboard` | `UPCarKeyboard` | ✅ 已完成 | 基线可用 | 车牌键盘 |
 | 17 | `u-card` | `UPCard` | ✅ 已完成 | 高 | props、String/Number 单位、三类 named slot、index 和四类点击事件已覆盖 |
 | 18 | `u-cascader` | `UPCascader` | ✅ 已完成 | 基线可用 | 级联选择器 |
-| 19 | `u-cate-tab` | `UPCateTab` | ✅ 已完成 | 基线可用 | 分类导航业务组件 |
+| 19 | `u-cate-tab` | `UPCateTab` | ✅ 已完成 | 中高 | current Binding、结构化 change payload 及旧版值回调已覆盖；DOM 滚动联动采用原生 ScrollView |
 | 20 | `u-cell` | `UPCell` | ✅ 已完成 | 高 | props、name payload、事件和插槽已覆盖 |
 | 21 | `u-cell-group` | `UPCellGroup` | ✅ 已完成 | 高 | 分组样式和内容容器已覆盖 |
 | 22 | `u-checkbox` | `UPCheckbox` | ✅ 已完成 | 高 | name/value、String/Number/Bool、事件及图标/标签插槽已覆盖 |
@@ -67,7 +67,7 @@
 | 34 | `u-copy` | `UPCopy` | ✅ 已完成 | 高 | 原生剪贴板、props、默认/自定义 slot、success 及空内容/失败行为已覆盖 |
 | 35 | `u-count-down` | `UPCountDown` | ✅ 已完成 | 高 | 时间输入、格式化、change/finish payload 与控制接口已覆盖 |
 | 36 | `u-count-to` | `UPCountTo` | ✅ 已完成 | 高 | 数字动画、格式化和事件已覆盖 |
-| 37 | `u-coupon` | `UPCoupon` | ✅ 已完成 | 基线可用 | 优惠券业务组件 |
+| 37 | `u-coupon` | `UPCoupon` | ✅ 已完成 | 中高 | amount/unit/limit/desc/time/action/style props、disabled/click 及旧 claim API 已覆盖 |
 | 38 | `u-cropper` | `UPCropper` | ✅ 已完成 | 基线可用 | 已提供裁剪矩形约束与确认回调基线 |
 | 39 | `u-datetime-picker` | `UPDatetimePicker` | ✅ 已完成 | 基线可用 | 可组合原生 DatePicker，需保持事件和范围语义 |
 | 40 | `u-divider` | `UPDivider` | ✅ 已完成 | 高 | 方向、文字、虚线和尺寸 props 已覆盖 |
@@ -79,7 +79,7 @@
 | 46 | `u-form` | `UPForm` | ✅ 已完成 | 基线可用 | 已有表单模型、规则校验和上下文基线 |
 | 47 | `u-form-item` | `UPFormItem` | ✅ 已完成 | 基线可用 | 已有布局、错误状态、props 和插槽基线 |
 | 48 | `u-gap` | `UPGap` | ✅ 已完成 | 中高 | 基础尺寸和背景已覆盖；后续可统一 shared mixin 接口 |
-| 49 | `u-goods-sku` | `UPGoodsSku` | ✅ 已完成 | 基线可用 | SKU 选择业务组件 |
+| 49 | `u-goods-sku` | `UPGoodsSku` | ✅ 已完成 | 中高 | 规格组合、库存禁用、数量 Binding、确认载荷及旧字典回调已覆盖 |
 | 50 | `u-grid` | `UPGrid` | ✅ 已完成 | 高 | col、border、align、gap、click 上下文已覆盖 |
 | 51 | `u-grid-item` | `UPGridItem` | ✅ 已完成 | 高 | name/index payload、item click 和插槽已覆盖 |
 | 52 | `u-guide` | `UPGuide` | ✅ 已完成 | 基线可用 | 引导遮罩与步骤定位 |
@@ -164,7 +164,7 @@
 | 131 | `u-tooltip` | `UPTooltip` | ✅ 已完成 | 基线可用 | 浮层定位、复制和关闭行为 |
 | 132 | `u-tr` | `UPTr` | ✅ 已完成 | 基线可用 | 旧版表格行 |
 | 133 | `u-transition` | `UPTransition` | ✅ 已完成 | 高 | mode、duration、timing、生命周期事件、click 和插槽已覆盖 |
-| 134 | `u-tree` | `UPTree` | ✅ 已完成 | 基线可用 | 树节点、选择、展开和递归状态 |
+| 134 | `u-tree` | `UPTree` | ✅ 已完成 | 中高 | 递归节点、禁用、多选/勾选 Binding、展开及 select/check 事件已覆盖 |
 | 135 | `u-upload` | `UPUpload` | ✅ 已完成 | 基线可用 | PhotosPicker、上传状态、预览及事件，复杂原生能力 |
 | 136 | `u-view` | `UPView` | ✅ 已完成 | 基线可用 | 上游通用 View 包装组件 |
 | 137 | `u-virtual-list` | `UPVirtualList` | ✅ 已完成 | 基线可用 | 需映射 Lazy 容器和可见范围计算 |
