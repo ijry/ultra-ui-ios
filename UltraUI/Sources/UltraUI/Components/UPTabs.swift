@@ -29,6 +29,12 @@ public struct UPTabsEvent: Equatable, Sendable {
     }
 }
 
+@MainActor
+private final class UPTabsSelectionState {
+    var index: Int
+    init(_ index: Int) { self.index = index }
+}
+
 /// Scrollable native tab strip corresponding to uview-plus `u-tabs`.
 @MainActor
 public struct UPTabs: View {
@@ -51,6 +57,7 @@ public struct UPTabs: View {
     private var onClickHandler: ((UPTabsEvent) -> Void)?
     private var onLongPressHandler: ((UPTabsEvent) -> Void)?
     private var onChangeHandler: ((UPTabsEvent) -> Void)?
+    private let uncontrolledState: UPTabsSelectionState
 
     public init(
         list: [UPTabsItem] = [], current: Binding<Int>? = nil, duration: Int = 300,
@@ -64,6 +71,7 @@ public struct UPTabs: View {
         self.list = list
         self.currentBinding = current
         self.current = current?.wrappedValue ?? 0
+        self.uncontrolledState = UPTabsSelectionState(current?.wrappedValue ?? 0)
         self.duration = duration
         self.lineColor = lineColor
         self.activeStyle = activeStyle
@@ -76,6 +84,22 @@ public struct UPTabs: View {
         self.keyName = keyName
         self.iconStyle = iconStyle
         self.shapeMode = shapeMode
+    }
+
+    public init(
+        list: [String], current: Binding<Int>? = nil, duration: Int = 300,
+        lineColor: String = "", activeStyle: UPStyle = UPStyle(["color": "#303133"]),
+        inactiveStyle: UPStyle = UPStyle(["color": "#606266"]),
+        lineWidth: some UPImageUnitValue = 20, lineHeight: some UPImageUnitValue = 3,
+        lineBgSize: String = "cover", itemStyle: UPStyle = UPStyle(["height": "44px"]),
+        scrollable: Bool = true, keyName: String = "name", iconStyle: UPStyle = UPStyle(),
+        shapeMode: String = ""
+    ) {
+        self.init(list: list.map { UPTabsItem(name: $0) }, current: current, duration: duration,
+                  lineColor: lineColor, activeStyle: activeStyle, inactiveStyle: inactiveStyle,
+                  lineWidth: lineWidth, lineHeight: lineHeight, lineBgSize: lineBgSize,
+                  itemStyle: itemStyle, scrollable: scrollable, keyName: keyName,
+                  iconStyle: iconStyle, shapeMode: shapeMode)
     }
 
     public init(
@@ -131,7 +155,7 @@ public struct UPTabs: View {
 
     public var selectedIndex: Int {
         guard !list.isEmpty else { return 0 }
-        return min(max(currentBinding?.wrappedValue ?? current, 0), list.count - 1)
+        return min(max(currentBinding?.wrappedValue ?? uncontrolledState.index, 0), list.count - 1)
     }
 
     public func select(_ index: Int) {
@@ -139,6 +163,7 @@ public struct UPTabs: View {
         let event = UPTabsEvent(item: list[index], index: index)
         onClickHandler?(event)
         guard !list[index].disabled, index != selectedIndex else { return }
+        uncontrolledState.index = index
         currentBinding?.wrappedValue = index
         onChangeHandler?(event)
     }

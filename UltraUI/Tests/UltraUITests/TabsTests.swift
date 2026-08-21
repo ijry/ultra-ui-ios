@@ -48,6 +48,24 @@ final class TabsTests: XCTestCase {
         XCTAssertEqual(item.icon, "chat")
         XCTAssertTrue(item.disabled)
     }
+
+    func testTabsAcceptsStringListAndTracksExternalBinding() {
+        let current = NavigationIntBox(0)
+        let tabs = UPTabs(list: ["推荐", "关注"], current: current.binding)
+
+        current.value = 1
+
+        XCTAssertEqual(tabs.list.map(\.name), ["推荐", "关注"])
+        XCTAssertEqual(tabs.selectedIndex, 1)
+    }
+
+    func testUncontrolledTabsSelectionUpdatesAfterSelect() {
+        let tabs = UPTabs(list: ["推荐", "关注"])
+
+        tabs.select(1)
+
+        XCTAssertEqual(tabs.selectedIndex, 1)
+    }
 }
 
 @MainActor

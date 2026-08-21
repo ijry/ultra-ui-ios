@@ -18,4 +18,21 @@ import XCTest
         XCTAssertEqual(item.title, "支付"); XCTAssertEqual(item.desc, "等待支付"); XCTAssertEqual(item.resolvedIconSize, 19); XCTAssertTrue(item.error)
         item.triggerClick(); XCTAssertTrue(clicked)
     }
+
+    func testStepsClampsNegativeCurrentAndResolvesTextMetadata() {
+        let steps = UPSteps(current: -2) { EmptyView() }
+        let item = UPStepsItem(title: "1", desc: "2", iconSize: "20px")
+
+        XCTAssertEqual(steps.current, 0)
+        XCTAssertEqual(steps.state(for: 0), .current)
+        XCTAssertEqual(item.title, "1")
+        XCTAssertEqual(item.desc, "2")
+        XCTAssertEqual(item.resolvedIconSize, 20)
+    }
+
+    func testStepsAcceptsStringCurrentNumber() {
+        let steps = UPSteps(current: "2") { EmptyView() }
+
+        XCTAssertEqual(steps.current, 2)
+    }
 }

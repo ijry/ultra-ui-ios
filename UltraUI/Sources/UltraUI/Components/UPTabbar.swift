@@ -1,5 +1,21 @@
 import SwiftUI
 
+public struct UPTabbarChange: Equatable, Sendable {
+    public var name: String
+    public var index: Int
+
+    public init(name: String, index: Int) {
+        self.name = name
+        self.index = index
+    }
+}
+
+@MainActor
+private final class UPTabbarSelectionState {
+    var value: String?
+    init(_ value: String?) { self.value = value }
+}
+
 @MainActor
 public struct UPTabbarItem: View, Identifiable {
     public let id: String
@@ -86,6 +102,8 @@ public struct UPTabbar: View {
     public var textMode: String
     private var valueBinding: Binding<String>?
     private var onChangeHandler: ((String) -> Void)?
+    private var onChangePayloadHandler: ((UPTabbarChange) -> Void)?
+    private let uncontrolledState: UPTabbarSelectionState
 
     public init(
         items: [UPTabbarItem] = [], value: Binding<String>? = nil,
@@ -99,6 +117,7 @@ public struct UPTabbar: View {
         self.items = items
         self.valueBinding = value
         self.value = value?.wrappedValue
+        self.uncontrolledState = UPTabbarSelectionState(value?.wrappedValue)
         self.safeAreaInsetBottom = safeAreaInsetBottom
         self.border = border
         self.borderColor = borderColor
@@ -115,6 +134,27 @@ public struct UPTabbar: View {
         self.itemShape = itemShape
         self.iconScale = iconScale
         self.textMode = textMode
+    }
+
+    public init(
+        items: [UPTabbarItem] = [], value: String,
+        safeAreaInsetBottom: Bool = true, border: Bool = true, borderColor: String = "",
+        zIndex: some UPImageUnitValue = 1, activeColor: String = "#1989fa",
+        inactiveColor: String = "#7d7e80", fixed: Bool = true, placeholder: Bool = true,
+        backgroundColor: String = "", styleType: String = "default", animationType: String = "none",
+        activeBackgroundColor: String = "", inactiveBackgroundColor: String = "",
+        itemShape: String = "default", iconScale: CGFloat = 1.1, textMode: String = "always"
+        ) {
+        self.init(items: items, value: nil, safeAreaInsetBottom: safeAreaInsetBottom,
+                  border: border, borderColor: borderColor, zIndex: zIndex,
+                  activeColor: activeColor, inactiveColor: inactiveColor, fixed: fixed,
+                  placeholder: placeholder, backgroundColor: backgroundColor,
+                  styleType: styleType, animationType: animationType,
+                  activeBackgroundColor: activeBackgroundColor,
+                  inactiveBackgroundColor: inactiveBackgroundColor, itemShape: itemShape,
+                  iconScale: iconScale, textMode: textMode)
+        self.value = value
+        self.uncontrolledState.value = value
     }
 
     public var body: some View {
@@ -137,16 +177,19 @@ public struct UPTabbar: View {
         .zIndex(zIndex)
     }
 
-    public var selectedValue: String? { valueBinding?.wrappedValue ?? value }
+    public var selectedValue: String? { valueBinding?.wrappedValue ?? uncontrolledState.value ?? value }
     private func resolvedIcon(for item: UPTabbarItem) -> String {
         if item.name == selectedValue, !item.activeIcon.isEmpty { return item.activeIcon }
         if item.name != selectedValue, !item.inactiveIcon.isEmpty { return item.inactiveIcon }
         return item.icon
     }
     public func select(_ name: String) {
-        guard items.contains(where: { $0.name == name }), name != selectedValue else { return }
+        guard let index = items.firstIndex(where: { $0.name == name }), name != selectedValue else { return }
+        uncontrolledState.value = name
         valueBinding?.wrappedValue = name
         onChangeHandler?(name)
+        onChangePayloadHandler?(UPTabbarChange(name: name, index: index))
     }
     public func onChange(_ action: @escaping (String) -> Void) -> Self { var copy = self; copy.onChangeHandler = action; return copy }
+    public func onChangePayload(_ action: @escaping (UPTabbarChange) -> Void) -> Self { var copy = self; copy.onChangePayloadHandler = action; return copy }
 }

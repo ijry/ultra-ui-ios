@@ -41,6 +41,23 @@ final class TabbarTests: XCTestCase {
         item.triggerClick()
         XCTAssertEqual(clicks, ["add"])
     }
+
+    func testTabbarAcceptsUncontrolledValueAndEmitsStructuredChange() {
+        var changes: [UPTabbarChange] = []
+        let tabbar = UPTabbar(
+            items: [
+                UPTabbarItem(name: "home", text: "首页"),
+                UPTabbarItem(name: "mine", text: "我的")
+            ],
+            value: "home"
+        ).onChangePayload { changes.append($0) }
+
+        tabbar.select("mine")
+        tabbar.select("missing")
+
+        XCTAssertEqual(tabbar.selectedValue, "mine")
+        XCTAssertEqual(changes, [UPTabbarChange(name: "mine", index: 1)])
+    }
 }
 
 @MainActor

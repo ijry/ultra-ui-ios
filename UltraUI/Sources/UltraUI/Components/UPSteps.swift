@@ -2,6 +2,18 @@ import SwiftUI
 
 public enum UPStepState: Equatable, Sendable { case finished, current, pending }
 
+public protocol UPStepsValueInput {
+    var upStepsValue: Int? { get }
+}
+
+extension Int: UPStepsValueInput {
+    public var upStepsValue: Int? { self }
+}
+
+extension String: UPStepsValueInput {
+    public var upStepsValue: Int? { Int(trimmingCharacters(in: .whitespacesAndNewlines)) }
+}
+
 @MainActor
 public struct UPSteps<Content: View>: View {
     public var direction: String; public var current: Int; public var activeColor: String
@@ -12,6 +24,15 @@ public struct UPSteps<Content: View>: View {
                 dot: Bool = false, @ViewBuilder content: () -> Content) {
         self.direction = direction; self.current = max(0, current); self.activeColor = activeColor
         self.inactiveColor = inactiveColor; self.activeIcon = activeIcon; self.inactiveIcon = inactiveIcon; self.dot = dot; self.content = content()
+    }
+    public init<Value: UPStepsValueInput>(direction: String = "row", current: Value,
+                activeColor: String = "#3c9cff", inactiveColor: String = "#969799",
+                activeIcon: String = "", inactiveIcon: String = "", dot: Bool = false,
+                @ViewBuilder content: () -> Content) {
+        self.init(direction: direction, current: max(0, current.upStepsValue ?? 0),
+                  activeColor: activeColor, inactiveColor: inactiveColor,
+                  activeIcon: activeIcon, inactiveIcon: inactiveIcon, dot: dot,
+                  content: content)
     }
     public var body: some View { Group { if direction == "column" { VStack { content } } else { HStack { content } } } }
     public func state(for index: Int) -> UPStepState { index < current ? .finished : index == current ? .current : .pending }
