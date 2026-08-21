@@ -28,6 +28,69 @@ final class ModalTests: XCTestCase {
         XCTAssertTrue(modal.hasPopupBottomSlot)
     }
 
+    func testStringAndNumberPropsAreNormalizedLikeUpstreamValues() {
+        let modal = UPModal(
+            show: .constant(false),
+            negativeTop: "32.5",
+            width: 320,
+            duration: "550"
+        )
+
+        XCTAssertEqual(modal.negativeTop, 32.5)
+        XCTAssertEqual(modal.width, "320")
+        XCTAssertEqual(modal.duration, 550)
+    }
+
+    func testConfirmButtonShapeSuppressesDefaultCancelButton() {
+        let modal = UPModal(
+            show: .constant(true),
+            showCancelButton: true,
+            confirmButtonShape: "circle"
+        )
+
+        XCTAssertFalse(modal.shouldShowCancelButton)
+        XCTAssertTrue(modal.shouldShowConfirmButton)
+    }
+
+    func testSynchronousConfirmHidesBeforeEmittingConfirm() {
+        var visible = true
+        var events: [String] = []
+        let show = Binding<Bool>(
+            get: { visible },
+            set: {
+                visible = $0
+                events.append("binding: \($0)")
+            }
+        )
+
+        let loading = UPModal<EmptyView>.applyConfirm(
+            show: show,
+            asyncClose: false,
+            onConfirm: { events.append("confirm") }
+        )
+
+        XCTAssertFalse(loading)
+        XCTAssertFalse(visible)
+        XCTAssertEqual(events, ["binding: false", "confirm"])
+    }
+
+    func testAsynchronousConfirmKeepsVisibleAndEntersLoadingBeforeCallback() {
+        var visible = true
+        var events: [String] = []
+        let show = Binding<Bool>(get: { visible }, set: { visible = $0 })
+
+        let loading = UPModal<EmptyView>.applyConfirm(
+            show: show,
+            asyncClose: true,
+            onLoadingChange: { events.append("loading: \($0)") },
+            onConfirm: { events.append("confirm visible: \(visible)") }
+        )
+
+        XCTAssertTrue(loading)
+        XCTAssertTrue(visible)
+        XCTAssertEqual(events, ["loading: true", "confirm visible: true"])
+    }
+
     func testAsyncConfirmCancellationKeepsModalVisibleAndEmitsBothEvents() {
         var visible = true
         var events: [String] = []

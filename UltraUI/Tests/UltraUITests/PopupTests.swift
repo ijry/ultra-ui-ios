@@ -79,6 +79,83 @@ final class PopupTests: XCTestCase {
         XCTAssertTrue(popup.hasBottomSlot)
     }
 
+    func testStringAndNumberPropsAreNormalizedLikeUpstreamValues() {
+        let popup = UPPopup(
+            show: .constant(true),
+            duration: "450",
+            zIndex: "12000",
+            round: 24,
+            overlayOpacity: "0.35"
+        ) {
+            EmptyView()
+        }
+
+        XCTAssertEqual(popup.duration, 450)
+        XCTAssertEqual(popup.zIndex, 12_000)
+        XCTAssertEqual(popup.round, "24")
+        XCTAssertEqual(popup.overlayOpacity, 0.35)
+    }
+
+    func testClosedModifierRegistersLifecycleHandler() {
+        var closed = false
+        let popup = UPPopup(show: .constant(true)) { EmptyView() }
+            .onClosed { closed = true }
+
+        popup.onClosed?()
+
+        XCTAssertTrue(closed)
+    }
+
+    func testExternalVisibilityChangeEmitsCloseWithoutDuplicatingInternalClose() {
+        var events: [String] = []
+
+        let externalCloseWasEmitted = UPPopup<EmptyView>.applyVisibilityChange(
+            oldValue: true,
+            newValue: false,
+            closeWasEmitted: false,
+            onClose: { events.append("close") }
+        )
+        XCTAssertFalse(externalCloseWasEmitted)
+        XCTAssertEqual(events, ["close"])
+
+        events.removeAll()
+        let internalCloseWasEmitted = UPPopup<EmptyView>.applyVisibilityChange(
+            oldValue: true,
+            newValue: false,
+            closeWasEmitted: true,
+            onClose: { events.append("close") }
+        )
+        XCTAssertFalse(internalCloseWasEmitted)
+        XCTAssertTrue(events.isEmpty)
+    }
+
+    func testPageInlineExternalCloseAlsoEmitsClosed() {
+        var events: [String] = []
+
+        _ = UPPopup<EmptyView>.applyVisibilityChange(
+            oldValue: true,
+            newValue: false,
+            pageInline: true,
+            closeWasEmitted: false,
+            onClose: { events.append("close") },
+            onClosed: { events.append("closed") }
+        )
+
+        XCTAssertEqual(events, ["close", "closed"])
+    }
+
+    func testNonInlineClosedIsScheduledAfterNativeTransition() async {
+        let closed = expectation(description: "closed")
+
+        UPPopup<EmptyView>.scheduleClosed(
+            pageInline: false,
+            duration: 0,
+            onClosed: { closed.fulfill() }
+        )
+
+        await fulfillment(of: [closed], timeout: 0.2)
+    }
+
     func testExplicitCloseUpdatesBindingBeforeEmittingClose() {
         var visible = true
         var events: [String] = []

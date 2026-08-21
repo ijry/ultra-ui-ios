@@ -47,6 +47,40 @@ final class ButtonTests: XCTestCase {
         XCTAssertTrue(button.hasDefaultSlot)
     }
 
+    func testStringAndNumberPropsAreNormalizedLikeUpstreamValues() {
+        let button = UPButton(
+            loadingText: 404,
+            loadingSize: "18.5",
+            throttleTime: "600",
+            hoverStartTime: "25",
+            hoverStayTime: 240,
+            text: 7
+        )
+
+        XCTAssertEqual(button.loadingText, "404")
+        XCTAssertEqual(button.loadingSize, 18.5)
+        XCTAssertEqual(button.throttleTime, 600)
+        XCTAssertEqual(button.hoverStartTime, 25)
+        XCTAssertEqual(button.hoverStayTime, 240)
+        XCTAssertEqual(button.text, "7")
+    }
+
+    func testNativeHostCanForwardOpenCapabilityEvents() {
+        var events: [UPButtonOpenCapability] = []
+        let button = UPButton(
+            onGetPhoneNumber: { events.append(.getPhoneNumber) },
+            onGetUserInfo: { events.append(.getUserInfo) },
+            onError: { events.append(.error) },
+            onOpenSetting: { events.append(.openSetting) },
+            onLaunchApp: { events.append(.launchApp) },
+            onAgreePrivacyAuthorization: { events.append(.agreePrivacyAuthorization) }
+        )
+
+        UPButtonOpenCapability.allCases.forEach(button.triggerOpenCapability)
+
+        XCTAssertEqual(events, UPButtonOpenCapability.allCases)
+    }
+
     func testThrottleAllowsLeadingTapRejectsTapInsideIntervalAndAllowsBoundary() {
         var throttle = UPButtonTapThrottle()
         let firstTap = Date(timeIntervalSinceReferenceDate: 1_000)

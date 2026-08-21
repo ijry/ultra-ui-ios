@@ -34,7 +34,9 @@ public struct UPModal<CustomContent: View>: View {
     @Environment(\.upTheme) private var theme
     @State private var loading = false
 
-    public init(show: Binding<Bool>,
+    public init<NegativeTop: UPCheckboxUnitValue,
+                Width: UPCheckboxUnitValue,
+                Duration: UPCheckboxUnitValue>(show: Binding<Bool>,
                 title: String = UPConfig.modal.title,
                 content: String = UPConfig.modal.content,
                 confirmText: String = UPConfig.modal.confirmText,
@@ -47,10 +49,10 @@ public struct UPModal<CustomContent: View>: View {
                 zoom: Bool = UPConfig.modal.zoom,
                 asyncClose: Bool = UPConfig.modal.asyncClose,
                 closeOnClickOverlay: Bool = UPConfig.modal.closeOnClickOverlay,
-                negativeTop: Double = UPConfig.modal.negativeTop,
-                width: String = UPConfig.modal.width,
+                negativeTop: NegativeTop = UPConfig.modal.negativeTop,
+                width: Width = UPConfig.modal.width,
                 confirmButtonShape: String = UPConfig.modal.confirmButtonShape,
-                duration: Double = UPConfig.modal.duration,
+                duration: Duration = UPConfig.modal.duration,
                 contentTextAlign: String = UPConfig.modal.contentTextAlign,
                 contentStyle: UPStyle = UPConfig.modal.contentStyle,
                 asyncCloseTip: String = UPConfig.modal.asyncCloseTip,
@@ -73,10 +75,10 @@ public struct UPModal<CustomContent: View>: View {
         self.zoom = zoom
         self.asyncClose = asyncClose
         self.closeOnClickOverlay = closeOnClickOverlay
-        self.negativeTop = negativeTop
-        self.width = width
+        self.negativeTop = Double(negativeTop.upCheckboxUnitValue) ?? 0
+        self.width = width.upCheckboxUnitValue
         self.confirmButtonShape = confirmButtonShape
-        self.duration = duration
+        self.duration = Double(duration.upCheckboxUnitValue) ?? 0
         self.contentTextAlign = contentTextAlign
         self.contentStyle = contentStyle
         self.asyncCloseTip = asyncCloseTip
@@ -118,7 +120,7 @@ public struct UPModal<CustomContent: View>: View {
                         .frame(maxWidth: .infinity)
                         .padding(.horizontal, 25)
                         .padding(.bottom, 15)
-                } else if showConfirmButton || showCancelButton {
+                } else if shouldShowConfirmButton || shouldShowCancelButton {
                     UPLine(color: theme.border.upHexString, direction: "row")
                     buttonGroup
                 }
@@ -155,16 +157,19 @@ public struct UPModal<CustomContent: View>: View {
         }
     }
 
+    var shouldShowConfirmButton: Bool { showConfirmButton }
+    var shouldShowCancelButton: Bool { showCancelButton && confirmButtonShape.isEmpty }
+
     private var buttonGroup: some View {
         HStack(spacing: 0) {
             if buttonReverse {
-                if showConfirmButton { defaultConfirmButton }
-                if showConfirmButton && showCancelButton { divider }
-                if showCancelButton { cancelButton }
+                if shouldShowConfirmButton { defaultConfirmButton }
+                if shouldShowConfirmButton && shouldShowCancelButton { divider }
+                if shouldShowCancelButton { cancelButton }
             } else {
-                if showCancelButton { cancelButton }
-                if showConfirmButton && showCancelButton { divider }
-                if showConfirmButton { defaultConfirmButton }
+                if shouldShowCancelButton { cancelButton }
+                if shouldShowConfirmButton && shouldShowCancelButton { divider }
+                if shouldShowConfirmButton { defaultConfirmButton }
             }
         }
         .frame(height: 48)
@@ -177,12 +182,12 @@ public struct UPModal<CustomContent: View>: View {
 
     private var defaultConfirmButton: some View {
         Button {
-            if asyncClose {
-                loading = true
-            } else {
-                show = false
-            }
-            onConfirm?()
+            loading = Self.applyConfirm(
+                show: $show,
+                asyncClose: asyncClose,
+                onLoadingChange: { loading = $0 },
+                onConfirm: onConfirm
+            )
         } label: {
             Group {
                 if loading {
@@ -240,6 +245,21 @@ public struct UPModal<CustomContent: View>: View {
         return isBlockedByAsyncConfirmation
     }
 
+    @discardableResult
+    static func applyConfirm(show: Binding<Bool>,
+                             asyncClose: Bool,
+                             onLoadingChange: ((Bool) -> Void)? = nil,
+                             onConfirm: (() -> Void)?) -> Bool {
+        if asyncClose {
+            onLoadingChange?(true)
+            onConfirm?()
+            return true
+        }
+        show.wrappedValue = false
+        onConfirm?()
+        return false
+    }
+
     private var textAlignment: TextAlignment {
         switch contentTextAlign {
         case "center": return .center
@@ -271,10 +291,10 @@ public extension UPModal where CustomContent == EmptyView {
          zoom: Bool = UPConfig.modal.zoom,
          asyncClose: Bool = UPConfig.modal.asyncClose,
          closeOnClickOverlay: Bool = UPConfig.modal.closeOnClickOverlay,
-         negativeTop: Double = UPConfig.modal.negativeTop,
-         width: String = UPConfig.modal.width,
+         negativeTop: some UPCheckboxUnitValue = UPConfig.modal.negativeTop,
+         width: some UPCheckboxUnitValue = UPConfig.modal.width,
          confirmButtonShape: String = UPConfig.modal.confirmButtonShape,
-         duration: Double = UPConfig.modal.duration,
+         duration: some UPCheckboxUnitValue = UPConfig.modal.duration,
          contentTextAlign: String = UPConfig.modal.contentTextAlign,
          contentStyle: UPStyle = UPConfig.modal.contentStyle,
          asyncCloseTip: String = UPConfig.modal.asyncCloseTip,
@@ -296,10 +316,10 @@ public extension UPModal where CustomContent == EmptyView {
         self.zoom = zoom
         self.asyncClose = asyncClose
         self.closeOnClickOverlay = closeOnClickOverlay
-        self.negativeTop = negativeTop
-        self.width = width
+        self.negativeTop = Double(negativeTop.upCheckboxUnitValue) ?? 0
+        self.width = width.upCheckboxUnitValue
         self.confirmButtonShape = confirmButtonShape
-        self.duration = duration
+        self.duration = Double(duration.upCheckboxUnitValue) ?? 0
         self.contentTextAlign = contentTextAlign
         self.contentStyle = contentStyle
         self.asyncCloseTip = asyncCloseTip

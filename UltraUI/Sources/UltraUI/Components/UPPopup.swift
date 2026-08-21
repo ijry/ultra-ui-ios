@@ -1,5 +1,7 @@
 import SwiftUI
 
+public typealias UPPopupUnitValue = UPCheckboxUnitValue
+
 /// Native SwiftUI counterpart of uview-plus `u-popup`.
 public struct UPPopup<Content: View>: View {
     @Binding var show: Bool
@@ -23,56 +25,63 @@ public struct UPPopup<Content: View>: View {
     var maxHeight: String
     var onClose: (() -> Void)?
     var onOpen: (() -> Void)?
+    var onClosed: (() -> Void)?
     var onClickOverlay: (() -> Void)?
     var onClick: (() -> Void)?
     private var bottomContent: AnyView?
     @ViewBuilder var content: () -> Content
+    @State private var closeEmitted = false
 
-    public init(show: Binding<Bool>,
+    public init<Duration: UPPopupUnitValue,
+                ZIndex: UPPopupUnitValue,
+                Round: UPPopupUnitValue,
+                OverlayOpacity: UPPopupUnitValue>(show: Binding<Bool>,
                 overlay: Bool = UPConfig.popup.overlay,
                 mode: String = UPConfig.popup.mode,
-                duration: Double = UPConfig.popup.duration,
+                duration: Duration = UPConfig.popup.duration,
                 closeable: Bool = UPConfig.popup.closeable,
                 overlayStyle: UPStyle = UPConfig.popup.overlayStyle,
                 closeOnClickOverlay: Bool = UPConfig.popup.closeOnClickOverlay,
-                zIndex: Double = UPConfig.popup.zIndex,
+                zIndex: ZIndex = UPConfig.popup.zIndex,
                 safeAreaInsetBottom: Bool = UPConfig.popup.safeAreaInsetBottom,
                 safeAreaInsetTop: Bool = UPConfig.popup.safeAreaInsetTop,
                 closeIconPos: String = UPConfig.popup.closeIconPos,
-                round: String = UPConfig.popup.round,
+                round: Round = UPConfig.popup.round,
                 zoom: Bool = UPConfig.popup.zoom,
                 bgColor: String = UPConfig.popup.bgColor,
-                overlayOpacity: Double = UPConfig.popup.overlayOpacity,
+                overlayOpacity: OverlayOpacity = UPConfig.popup.overlayOpacity,
                 pageInline: Bool = UPConfig.popup.pageInline,
                 touchable: Bool = UPConfig.popup.touchable,
                 minHeight: String = UPConfig.popup.minHeight,
                 maxHeight: String = UPConfig.popup.maxHeight,
                 onClose: (() -> Void)? = nil,
                 onOpen: (() -> Void)? = nil,
+                onClosed: (() -> Void)? = nil,
                 onClickOverlay: (() -> Void)? = nil,
                 onClick: (() -> Void)? = nil,
                 @ViewBuilder content: @escaping () -> Content) {
         self._show = show
         self.overlay = overlay
         self.mode = Self.resolvedMode(mode)
-        self.duration = duration
+        self.duration = Double(duration.upCheckboxUnitValue) ?? 0
         self.closeable = closeable
         self.overlayStyle = overlayStyle
         self.closeOnClickOverlay = closeOnClickOverlay
-        self.zIndex = zIndex
+        self.zIndex = Double(zIndex.upCheckboxUnitValue) ?? 0
         self.safeAreaInsetBottom = safeAreaInsetBottom
         self.safeAreaInsetTop = safeAreaInsetTop
         self.closeIconPos = closeIconPos
-        self.round = round
+        self.round = round.upCheckboxUnitValue
         self.zoom = zoom
         self.bgColor = bgColor
-        self.overlayOpacity = overlayOpacity
+        self.overlayOpacity = Double(overlayOpacity.upCheckboxUnitValue) ?? 0.5
         self.pageInline = pageInline
         self.touchable = touchable
         self.minHeight = minHeight
         self.maxHeight = maxHeight
         self.onClose = onClose
         self.onOpen = onOpen
+        self.onClosed = onClosed
         self.onClickOverlay = onClickOverlay
         self.onClick = onClick
         self.bottomContent = nil
@@ -122,8 +131,25 @@ public struct UPPopup<Content: View>: View {
             }
         }
         .animation(.easeInOut(duration: max(0, duration) / 1_000), value: show)
-        .onChange(of: show) { _, newValue in
-            if newValue { onOpen?() }
+        .onChange(of: show) { oldValue, newValue in
+            if newValue {
+                closeEmitted = false
+                onOpen?()
+            } else if oldValue {
+                closeEmitted = Self.applyVisibilityChange(
+                    oldValue: oldValue,
+                    newValue: newValue,
+                    pageInline: pageInline,
+                    closeWasEmitted: closeEmitted,
+                    onClose: onClose,
+                    onClosed: onClosed
+                )
+                Self.scheduleClosed(
+                    pageInline: pageInline,
+                    duration: duration,
+                    onClosed: onClosed
+                )
+            }
         }
     }
 
@@ -179,6 +205,7 @@ public struct UPPopup<Content: View>: View {
             .overlay(alignment: closeIconAlignment) {
                 if closeable {
                     Button {
+                        closeEmitted = true
                         Self.applyClose(show: $show, onClose: onClose)
                     } label: {
                         Image(systemName: "xmark")
@@ -223,6 +250,30 @@ public struct UPPopup<Content: View>: View {
         onClose?()
     }
 
+    @discardableResult
+    static func applyVisibilityChange(oldValue: Bool,
+                                      newValue: Bool,
+                                      pageInline: Bool = false,
+                                      closeWasEmitted: Bool,
+                                      onClose: (() -> Void)?,
+                                      onClosed: (() -> Void)? = nil) -> Bool {
+        guard oldValue, !newValue else { return closeWasEmitted }
+        if !closeWasEmitted { onClose?() }
+        if pageInline { onClosed?() }
+        return false
+    }
+
+    static func scheduleClosed(pageInline: Bool,
+                               duration: Double,
+                               onClosed: (() -> Void)?) {
+        guard !pageInline, let onClosed else { return }
+        let workItem = DispatchWorkItem(block: onClosed)
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + max(0, duration) / 1_000,
+            execute: workItem
+        )
+    }
+
     static func applyOverlayClick(show: Binding<Bool>,
                                   mode: String,
                                   closeOnClickOverlay: Bool,
@@ -239,6 +290,9 @@ public struct UPPopup<Content: View>: View {
     }
 
     private func handleOverlayClick() {
+        if closeOnClickOverlay {
+            closeEmitted = true
+        }
         Self.applyOverlayClick(
             show: $show,
             mode: mode,
@@ -299,6 +353,12 @@ public extension UPPopup {
     func onOpen(_ action: @escaping () -> Void) -> UPPopup {
         var copy = self
         copy.onOpen = action
+        return copy
+    }
+
+    func onClosed(_ action: @escaping () -> Void) -> UPPopup {
+        var copy = self
+        copy.onClosed = action
         return copy
     }
 

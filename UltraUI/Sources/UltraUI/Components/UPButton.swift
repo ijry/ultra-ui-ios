@@ -21,6 +21,17 @@ struct UPButtonTapThrottle {
     }
 }
 
+public typealias UPButtonUnitValue = UPCheckboxUnitValue
+
+public enum UPButtonOpenCapability: CaseIterable, Equatable, Sendable {
+    case getPhoneNumber
+    case getUserInfo
+    case error
+    case openSetting
+    case launchApp
+    case agreePrivacyAuthorization
+}
+
 /// Native SwiftUI counterpart of uview-plus `u-button`.
 public struct UPButton: View {
     var type: String
@@ -68,15 +79,20 @@ public struct UPButton: View {
     @State private var tapThrottle = UPButtonTapThrottle()
     @Environment(\.upTheme) private var theme
 
-    public init(type: String = UPConfig.button.type,
+    public init<LoadingText: UPButtonUnitValue,
+                LoadingSize: UPButtonUnitValue,
+                ThrottleTime: UPButtonUnitValue,
+                HoverStartTime: UPButtonUnitValue,
+                HoverStayTime: UPButtonUnitValue,
+                TextValue: UPButtonUnitValue>(type: String = UPConfig.button.type,
                 size: String = UPConfig.button.size,
                 shape: String = UPConfig.button.shape,
                 plain: Bool = UPConfig.button.plain,
                 disabled: Bool = UPConfig.button.disabled,
                 loading: Bool = UPConfig.button.loading,
-                loadingText: String = UPConfig.button.loadingText,
+                loadingText: LoadingText = UPConfig.button.loadingText,
                 loadingMode: String = UPConfig.button.loadingMode,
-                loadingSize: Double = UPConfig.button.loadingSize,
+                loadingSize: LoadingSize = UPConfig.button.loadingSize,
                 openType: String = UPConfig.button.openType,
                 formType: String = UPConfig.button.formType,
                 appParameter: String = UPConfig.button.appParameter,
@@ -88,10 +104,10 @@ public struct UPButton: View {
                 sendMessageImg: String = UPConfig.button.sendMessageImg,
                 showMessageCard: Bool = UPConfig.button.showMessageCard,
                 dataName: String = UPConfig.button.dataName,
-                throttleTime: Double = UPConfig.button.throttleTime,
-                hoverStartTime: Double = UPConfig.button.hoverStartTime,
-                hoverStayTime: Double = UPConfig.button.hoverStayTime,
-                text: String = UPConfig.button.text,
+                throttleTime: ThrottleTime = UPConfig.button.throttleTime,
+                hoverStartTime: HoverStartTime = UPConfig.button.hoverStartTime,
+                hoverStayTime: HoverStayTime = UPConfig.button.hoverStayTime,
+                text: TextValue = UPConfig.button.text,
                 icon: String = UPConfig.button.icon,
                 iconColor: String = UPConfig.button.iconColor,
                 color: String = UPConfig.button.color,
@@ -112,9 +128,9 @@ public struct UPButton: View {
         self.plain = plain
         self.disabled = disabled
         self.loading = loading
-        self.loadingText = loadingText
+        self.loadingText = loadingText.upCheckboxUnitValue
         self.loadingMode = loadingMode
-        self.loadingSize = loadingSize
+        self.loadingSize = Double(loadingSize.upCheckboxUnitValue) ?? 0
         self.openType = openType
         self.formType = formType
         self.appParameter = appParameter
@@ -126,10 +142,10 @@ public struct UPButton: View {
         self.sendMessageImg = sendMessageImg
         self.showMessageCard = showMessageCard
         self.dataName = dataName
-        self.throttleTime = throttleTime
-        self.hoverStartTime = hoverStartTime
-        self.hoverStayTime = hoverStayTime
-        self.text = text
+        self.throttleTime = Double(throttleTime.upCheckboxUnitValue) ?? 0
+        self.hoverStartTime = Double(hoverStartTime.upCheckboxUnitValue) ?? 0
+        self.hoverStayTime = Double(hoverStayTime.upCheckboxUnitValue) ?? 0
+        self.text = text.upCheckboxUnitValue
         self.icon = icon
         self.iconColor = iconColor
         self.color = color
@@ -149,15 +165,21 @@ public struct UPButton: View {
     /// SwiftUI mapping of uview-plus `u-button`'s default slot.
     ///
     /// The supplied content replaces `text` while the button is not loading.
-    public init<Content: View>(type: String = UPConfig.button.type,
+    public init<Content: View,
+                               LoadingText: UPButtonUnitValue,
+                               LoadingSize: UPButtonUnitValue,
+                               ThrottleTime: UPButtonUnitValue,
+                               HoverStartTime: UPButtonUnitValue,
+                               HoverStayTime: UPButtonUnitValue,
+                               TextValue: UPButtonUnitValue>(type: String = UPConfig.button.type,
                                size: String = UPConfig.button.size,
                                shape: String = UPConfig.button.shape,
                                plain: Bool = UPConfig.button.plain,
                                disabled: Bool = UPConfig.button.disabled,
                                loading: Bool = UPConfig.button.loading,
-                               loadingText: String = UPConfig.button.loadingText,
+                               loadingText: LoadingText = UPConfig.button.loadingText,
                                loadingMode: String = UPConfig.button.loadingMode,
-                               loadingSize: Double = UPConfig.button.loadingSize,
+                               loadingSize: LoadingSize = UPConfig.button.loadingSize,
                                openType: String = UPConfig.button.openType,
                                formType: String = UPConfig.button.formType,
                                appParameter: String = UPConfig.button.appParameter,
@@ -169,10 +191,10 @@ public struct UPButton: View {
                                sendMessageImg: String = UPConfig.button.sendMessageImg,
                                showMessageCard: Bool = UPConfig.button.showMessageCard,
                                dataName: String = UPConfig.button.dataName,
-                               throttleTime: Double = UPConfig.button.throttleTime,
-                               hoverStartTime: Double = UPConfig.button.hoverStartTime,
-                               hoverStayTime: Double = UPConfig.button.hoverStayTime,
-                               text: String = UPConfig.button.text,
+                               throttleTime: ThrottleTime = UPConfig.button.throttleTime,
+                               hoverStartTime: HoverStartTime = UPConfig.button.hoverStartTime,
+                               hoverStayTime: HoverStayTime = UPConfig.button.hoverStayTime,
+                               text: TextValue = UPConfig.button.text,
                                icon: String = UPConfig.button.icon,
                                iconColor: String = UPConfig.button.iconColor,
                                color: String = UPConfig.button.color,
@@ -231,6 +253,17 @@ public struct UPButton: View {
 
     var hasDefaultSlot: Bool {
         defaultSlotContent != nil
+    }
+
+    public func triggerOpenCapability(_ capability: UPButtonOpenCapability) {
+        switch capability {
+        case .getPhoneNumber: onGetPhoneNumber?()
+        case .getUserInfo: onGetUserInfo?()
+        case .error: onError?()
+        case .openSetting: onOpenSetting?()
+        case .launchApp: onLaunchApp?()
+        case .agreePrivacyAuthorization: onAgreePrivacyAuthorization?()
+        }
     }
 
     public static func height(for size: String) -> CGFloat {
