@@ -1,8 +1,8 @@
 # uview-plus SwiftUI 复刻进度
 
-> 最后更新：2026-08-21
+> 最后更新：2026-08-22
 > 上游基线：uview-plus `3.8.86`，以 `components/u-*` 目录为完整清单
-> iOS 基线：`main` / `8d3f5be`
+> iOS 基线：`main` / `b345e9f`
 
 ## 总览
 
@@ -69,7 +69,7 @@
 | 36 | `u-count-to` | `UPCountTo` | ✅ 已完成 | 高 | 数字动画、格式化和事件已覆盖 |
 | 37 | `u-coupon` | `UPCoupon` | ✅ 已完成 | 中高 | amount/unit/limit/desc/time/action/style props、disabled/click 及旧 claim API 已覆盖 |
 | 38 | `u-cropper` | `UPCropper` | ✅ 已完成 | 基线可用 | 已提供裁剪矩形约束与确认回调基线 |
-| 39 | `u-datetime-picker` | `UPDatetimePicker` | ✅ 已完成 | 基线可用 | 可组合原生 DatePicker，需保持事件和范围语义 |
+| 39 | `u-datetime-picker` | `UPDatetimePicker` | ✅ 已完成 | 中高 | Int64 时间戳与 String time/timesecond Binding、范围夹取、结构化 payload、受控 show、关闭生命周期、原生双向 DatePicker 及 named slots 已覆盖；列级 formatter/filter 与原生滚动时序采用适配语义（`b345e9f`） |
 | 40 | `u-divider` | `UPDivider` | ✅ 已完成 | 高 | 方向、文字、虚线和尺寸 props 已覆盖 |
 | 41 | `u-dragsort` | `UPDragsort` | ✅ 已完成 | 基线可用 | 拖拽排序与事件 payload |
 | 42 | `u-dropdown` | `UPDropdown` | ✅ 已完成 | 基线可用 | 与 `UPDropdownItem` 配套 |
@@ -113,9 +113,9 @@
 | 80 | `u-pagination` | `UPPagination` | ✅ 已完成 | 基线可用 | 页码状态与 change payload |
 | 81 | `u-parse` | `UPParse` | ✅ 已完成 | 基线可用 | 已提供受控 HTML 标签解析与错误回调 |
 | 82 | `u-pdf-reader` | `UPPDFReader` | ✅ 已完成 | 基线可用 | 已提供 PDFKit 条件适配和页码事件基线 |
-| 83 | `u-picker` | `UPPicker` | ✅ 已完成 | 基线可用 | 与 picker-column、toolbar 配套 |
-| 84 | `u-picker-column` | `UPPickerColumn` | ✅ 已完成 | 基线可用 | Picker 内部列组件 |
-| 85 | `u-picker-data` | `UPPickerData` | ✅ 已完成 | 基线可用 | 上游 Picker 数据辅助组件 |
+| 83 | `u-picker` | `UPPicker` | ✅ 已完成 | 中高 | String/Number/Bool props、受控 show、defaultIndex/最近确认值回滚、上游 payload aliases、关闭生命周期、UPToolbar 及 named slots 已覆盖（`b345e9f`） |
+| 84 | `u-picker-column` | `UPPickerColumn` | ✅ 已完成 | 中高 | 原生 wheel Binding、索引夹取及非负 itemHeight 已覆盖（`b345e9f`） |
+| 85 | `u-picker-data` | `UPPickerData` | ✅ 已完成 | 中高 | text/value/id 数据模型及 Picker 结构化事件 payload 已覆盖（`b345e9f`） |
 | 86 | `u-popover` | `UPPopover` | ✅ 已完成 | 基线可用 | 原生 popover 与箭头定位 |
 | 87 | `u-popup` | `UPPopup` | ✅ 已完成 | 中高 | 多方向原生 popup；String/Number 动画、层级、圆角和透明度、外部关闭补发 close、去重及 closed 生命周期已覆盖；DOM 手势采用 SwiftUI 原生语义 |
 | 88 | `u-poster` | `UPPoster` | ✅ 已完成 | 基线可用 | 海报合成与导出 |
