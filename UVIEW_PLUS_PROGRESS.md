@@ -2,7 +2,7 @@
 
 > 最后更新：2026-08-21
 > 上游基线：uview-plus `3.8.86`，以 `components/u-*` 目录为完整清单
-> iOS 基线：`main` / `3d5706f`
+> iOS 基线：`main` / `8d3f5be`
 
 ## 总览
 
@@ -42,7 +42,7 @@
 | 9 | `u-badge` | `UPBadge` | ✅ 已完成 | 高 | props、定位和 String/Number 输入已覆盖 |
 | 10 | `u-barcode` | `UPBarcode` | ✅ 已完成 | 基线可用 | 已采用 Core Image Code 128 生成 |
 | 11 | `u-box` | `UPBox` | ✅ 已完成 | 高 | 三区域布局、默认值、颜色及 named slots 已覆盖 |
-| 12 | `u-button` | `UPButton` | ✅ 已完成 | 基线可用 | 已有原生 Button 封装；props/事件兼容基线已提交 |
+| 12 | `u-button` | `UPButton` | ✅ 已完成 | 中高 | 原生 Button 封装；String/Number 文本、尺寸和时间 props、点击节流、默认 slot 及开放能力宿主转发接口已覆盖；小程序能力由 iOS 宿主实现 |
 | 13 | `u-calendar` | `UPCalendar` | ✅ 已完成 | 中高 | single/multiple/range、日期 Binding、边界/只读/maxCount、select/confirm/close 已覆盖 |
 | 14 | `u-calendar-strip` | `UPCalendarStrip` | ✅ 已完成 | 中高 | modelValue/current Binding、只读/禁用日期及结构化 change payload 已覆盖 |
 | 15 | `u-canvas` | `UPCanvas` | ✅ 已完成 | 基线可用 | 已采用 SwiftUI Canvas 命令模型 |
@@ -101,7 +101,7 @@
 | 68 | `u-loadmore` | `UPLoadmore` | ✅ 已完成 | 高 | status、图标、文字、尺寸和 click 已覆盖 |
 | 69 | `u-markdown` | `UPMarkdown` | ✅ 已完成 | 基线可用 | 已采用 Foundation AttributedString，无第三方依赖 |
 | 70 | `u-message-input` | `UPMessageInput` | ✅ 已完成 | 基线可用 | 上游独立消息输入组件 |
-| 71 | `u-modal` | `UPModal` | ✅ 已完成 | 基线可用 | 基于原生弹层，asyncClose、事件和插槽基线已提交 |
+| 71 | `u-modal` | `UPModal` | ✅ 已完成 | 中高 | 基于原生弹层；String/Number 偏移、宽度和动画时长、同步/异步确认顺序、异步取消、named slots 及 `confirmButtonShape` 取消按钮抑制已覆盖 |
 | 72 | `u-navbar` | `UPNavbar` | ✅ 已完成 | 基线可用 | 需映射 NavigationStack/toolbar，同时保留上游布局 props |
 | 73 | `u-navbar-mini` | `UPNavbarMini` | ✅ 已完成 | 基线可用 | 小程序胶囊导航语义需原生适配 |
 | 74 | `u-no-network` | `UPNoNetwork` | ✅ 已完成 | 基线可用 | 已提供可注入网络状态模型和 Network.framework 适配 |
@@ -117,7 +117,7 @@
 | 84 | `u-picker-column` | `UPPickerColumn` | ✅ 已完成 | 基线可用 | Picker 内部列组件 |
 | 85 | `u-picker-data` | `UPPickerData` | ✅ 已完成 | 基线可用 | 上游 Picker 数据辅助组件 |
 | 86 | `u-popover` | `UPPopover` | ✅ 已完成 | 基线可用 | 原生 popover 与箭头定位 |
-| 87 | `u-popup` | `UPPopup` | ✅ 已完成 | 基线可用 | 多方向 popup 基线已有；当前有未提交 props/生命周期增强 |
+| 87 | `u-popup` | `UPPopup` | ✅ 已完成 | 中高 | 多方向原生 popup；String/Number 动画、层级、圆角和透明度、外部关闭补发 close、去重及 closed 生命周期已覆盖；DOM 手势采用 SwiftUI 原生语义 |
 | 88 | `u-poster` | `UPPoster` | ✅ 已完成 | 基线可用 | 海报合成与导出 |
 | 89 | `u-pull-refresh` | `UPPullRefresh` | ✅ 已完成 | 基线可用 | 可组合 SwiftUI refreshable，需保持状态接口 |
 | 90 | `u-qrcode` | `UPQRCode` | ✅ 已完成 | 基线可用 | 可基于 Core Image 生成二维码 |
