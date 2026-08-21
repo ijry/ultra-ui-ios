@@ -8,7 +8,7 @@ public typealias UPSearchUnitValue = UPCheckboxUnitValue
 ///
 /// The controller deliberately stores actions rather than a UIKit text-field
 /// reference. This keeps the public surface usable from SwiftUI and leaves
-/// room for a future Fastview adapter to provide its own native focus bridge.
+/// room for a host adapter to provide its own native focus bridge.
 @MainActor
 public final class UPSearchController: ObservableObject {
     private enum Action {
