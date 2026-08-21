@@ -7,11 +7,12 @@ final class TextareaTests: XCTestCase {
     func testDefaultsAndTruncation() {
         let textarea = UPTextarea()
 
-        XCTAssertEqual(textarea.height, 100)
+        XCTAssertEqual(textarea.height, 70)
         XCTAssertFalse(textarea.autoHeight)
         XCTAssertFalse(textarea.count)
         XCTAssertEqual(UPTextarea.truncated("12345", maxlength: 3), "123")
         XCTAssertEqual(UPTextarea.truncated("12345", maxlength: nil), "12345")
+        XCTAssertEqual(UPTextarea.truncated("12345", maxlength: -1), "12345")
         XCTAssertEqual(UPTextarea.truncated("12345", maxlength: 0), "")
     }
 
@@ -67,6 +68,51 @@ final class TextareaTests: XCTestCase {
         XCTAssertEqual(localBox.value, "local")
         XCTAssertEqual(controller.errors["profile.bio"], "至少 4 个字符")
         XCTAssertEqual(changes, ["abc"])
+    }
+
+    func testFormPropValueTakesPrecedenceOverModelValueAndLegacyBindings() {
+        let formBox = TextareaModelBox(["bio": .string("form")])
+        let form = UPFormContext(model: formBox.binding, controller: UPFormController())
+        let modelValueBox = TextareaTextBox("model")
+        let legacyTextBox = TextareaTextBox("legacy")
+        let localTextBox = TextareaTextBox("local")
+
+        XCTAssertEqual(
+            UPTextarea.value(
+                prop: "bio",
+                form: form,
+                modelValue: modelValueBox.binding,
+                directText: legacyTextBox.binding,
+                fallbackText: localTextBox.binding
+            ),
+            "form"
+        )
+    }
+
+    func testCommitFormatsThenReportsTheNativeLineCount() {
+        let modelValueBox = TextareaTextBox("old")
+        let localTextBox = TextareaTextBox("local")
+        var changes: [String] = []
+        var lineCounts: [Int] = []
+
+        UPTextarea.commit(
+            "alpha\nbeta ",
+            prop: "",
+            form: nil,
+            modelValue: modelValueBox.binding,
+            directText: nil,
+            fallbackText: localTextBox.binding,
+            maxlength: -1,
+            readonly: false,
+            formatter: { $0.trimmingCharacters(in: .whitespaces) },
+            onChange: { changes.append($0) },
+            onLineChange: { lineCounts.append($0) }
+        )
+
+        XCTAssertEqual(modelValueBox.value, "alpha\nbeta")
+        XCTAssertEqual(localTextBox.value, "local")
+        XCTAssertEqual(changes, ["alpha\nbeta"])
+        XCTAssertEqual(lineCounts, [2])
     }
 
     func testCommitUsesDirectBindingOutsideFormAndReadonlyPreservesValue() {

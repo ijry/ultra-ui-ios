@@ -19,6 +19,28 @@ final class ToastTests: XCTestCase {
         XCTAssertEqual(UPToast.alignment(for: "unexpected"), .center)
     }
 
+    func testZeroDurationToastDismissesAndCompletesOnlyOnce() async {
+        let center = UPToastCenter()
+        let completed = expectation(description: "zero-duration toast completion")
+        var callbackCount = 0
+
+        center.show(UPToastOptions(
+            message: "Saved",
+            show: true,
+            duration: 0,
+            callback: {
+                callbackCount += 1
+                completed.fulfill()
+            }
+        ))
+
+        await fulfillment(of: [completed], timeout: 1)
+        XCTAssertFalse(center.isShowing)
+
+        center.hide()
+        XCTAssertEqual(callbackCount, 1)
+    }
+
     func testCenterShowAndHide() {
         let center = UPToastCenter()
         center.show(message: "Saved", type: "success", position: "top", duration: 5_000)

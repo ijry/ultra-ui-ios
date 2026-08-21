@@ -19,6 +19,7 @@ public struct UPModal<CustomContent: View>: View {
     var confirmButtonShape: String
     var duration: Double
     var contentTextAlign: String
+    var contentStyle: UPStyle
     var asyncCloseTip: String
     var asyncCancelClose: Bool
     var onConfirm: (() -> Void)?
@@ -27,6 +28,8 @@ public struct UPModal<CustomContent: View>: View {
     var onCancelOnAsync: (() -> Void)?
     private var hasCustomContent: Bool
     private var customContent: CustomContent
+    private var confirmButtonContent: AnyView?
+    private var popupBottomContent: AnyView?
 
     @Environment(\.upTheme) private var theme
     @State private var loading = false
@@ -49,6 +52,7 @@ public struct UPModal<CustomContent: View>: View {
                 confirmButtonShape: String = UPConfig.modal.confirmButtonShape,
                 duration: Double = UPConfig.modal.duration,
                 contentTextAlign: String = UPConfig.modal.contentTextAlign,
+                contentStyle: UPStyle = UPConfig.modal.contentStyle,
                 asyncCloseTip: String = UPConfig.modal.asyncCloseTip,
                 asyncCancelClose: Bool = UPConfig.modal.asyncCancelClose,
                 onConfirm: (() -> Void)? = nil,
@@ -74,6 +78,7 @@ public struct UPModal<CustomContent: View>: View {
         self.confirmButtonShape = confirmButtonShape
         self.duration = duration
         self.contentTextAlign = contentTextAlign
+        self.contentStyle = contentStyle
         self.asyncCloseTip = asyncCloseTip
         self.asyncCancelClose = asyncCancelClose
         self.onConfirm = onConfirm
@@ -82,6 +87,8 @@ public struct UPModal<CustomContent: View>: View {
         self.onCancelOnAsync = onCancelOnAsync
         self.hasCustomContent = true
         self.customContent = customContent()
+        self.confirmButtonContent = nil
+        self.popupBottomContent = nil
     }
 
     public var body: some View {
@@ -106,7 +113,12 @@ public struct UPModal<CustomContent: View>: View {
 
                 contentArea
 
-                if showConfirmButton || showCancelButton {
+                if let confirmButtonContent {
+                    confirmButtonContent
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 25)
+                        .padding(.bottom, 15)
+                } else if showConfirmButton || showCancelButton {
                     UPLine(color: theme.border.upHexString, direction: "row")
                     buttonGroup
                 }
@@ -116,6 +128,7 @@ public struct UPModal<CustomContent: View>: View {
             .clipShape(RoundedRectangle(cornerRadius: 6))
             .padding(.top, -negativeTop)
         }
+        .settingBottomContent(popupBottomContent)
         .onChange(of: show) { _, newValue in
             if newValue && loading { loading = false }
         }
@@ -125,6 +138,7 @@ public struct UPModal<CustomContent: View>: View {
     private var contentArea: some View {
         if hasCustomContent {
             customContent
+                .upStyle(contentStyle)
                 .padding(.horizontal, 25)
                 .padding(.top, title.isEmpty ? 25 : 0)
                 .padding(.bottom, 25)
@@ -134,6 +148,7 @@ public struct UPModal<CustomContent: View>: View {
                 .foregroundStyle(theme.content)
                 .multilineTextAlignment(textAlignment)
                 .frame(maxWidth: .infinity, alignment: frameAlignment)
+                .upStyle(contentStyle)
                 .padding(.horizontal, 25)
                 .padding(.top, title.isEmpty ? 25 : 0)
                 .padding(.bottom, 25)
@@ -143,13 +158,13 @@ public struct UPModal<CustomContent: View>: View {
     private var buttonGroup: some View {
         HStack(spacing: 0) {
             if buttonReverse {
-                if showConfirmButton { confirmButton }
+                if showConfirmButton { defaultConfirmButton }
                 if showConfirmButton && showCancelButton { divider }
                 if showCancelButton { cancelButton }
             } else {
                 if showCancelButton { cancelButton }
                 if showConfirmButton && showCancelButton { divider }
-                if showConfirmButton { confirmButton }
+                if showConfirmButton { defaultConfirmButton }
             }
         }
         .frame(height: 48)
@@ -160,7 +175,7 @@ public struct UPModal<CustomContent: View>: View {
             .frame(height: 48)
     }
 
-    private var confirmButton: some View {
+    private var defaultConfirmButton: some View {
         Button {
             if asyncClose {
                 loading = true
@@ -186,14 +201,16 @@ public struct UPModal<CustomContent: View>: View {
 
     private var cancelButton: some View {
         Button {
-            if asyncClose && loading {
-                if !asyncCloseTip.isEmpty {
-                    UPToast.show(message: asyncCloseTip, type: "default", position: "center")
-                }
-                onCancelOnAsync?()
-            } else {
-                if !asyncCancelClose { show = false }
-                onCancel?()
+            let shouldShowAsyncCloseTip = Self.applyCancel(
+                show: $show,
+                asyncClose: asyncClose,
+                isConfirming: loading,
+                asyncCancelClose: asyncCancelClose,
+                onCancel: onCancel,
+                onCancelOnAsync: onCancelOnAsync
+            )
+            if shouldShowAsyncCloseTip && !asyncCloseTip.isEmpty {
+                UPToast.show(message: asyncCloseTip, type: "default", position: "center")
             }
         } label: {
             Text(cancelText)
@@ -203,6 +220,24 @@ public struct UPModal<CustomContent: View>: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    /// Applies uview-plus `cancelHandler` semantics and returns whether the
+    /// async-confirmation tip should be presented by the native view.
+    static func applyCancel(show: Binding<Bool>,
+                            asyncClose: Bool,
+                            isConfirming: Bool,
+                            asyncCancelClose: Bool,
+                            onCancel: (() -> Void)?,
+                            onCancelOnAsync: (() -> Void)?) -> Bool {
+        let isBlockedByAsyncConfirmation = asyncClose && isConfirming
+        if isBlockedByAsyncConfirmation {
+            onCancelOnAsync?()
+        } else if !asyncCancelClose {
+            show.wrappedValue = false
+        }
+        onCancel?()
+        return isBlockedByAsyncConfirmation
     }
 
     private var textAlignment: TextAlignment {
@@ -241,6 +276,7 @@ public extension UPModal where CustomContent == EmptyView {
          confirmButtonShape: String = UPConfig.modal.confirmButtonShape,
          duration: Double = UPConfig.modal.duration,
          contentTextAlign: String = UPConfig.modal.contentTextAlign,
+         contentStyle: UPStyle = UPConfig.modal.contentStyle,
          asyncCloseTip: String = UPConfig.modal.asyncCloseTip,
          asyncCancelClose: Bool = UPConfig.modal.asyncCancelClose,
          onConfirm: (() -> Void)? = nil,
@@ -265,6 +301,7 @@ public extension UPModal where CustomContent == EmptyView {
         self.confirmButtonShape = confirmButtonShape
         self.duration = duration
         self.contentTextAlign = contentTextAlign
+        self.contentStyle = contentStyle
         self.asyncCloseTip = asyncCloseTip
         self.asyncCancelClose = asyncCancelClose
         self.onConfirm = onConfirm
@@ -273,10 +310,29 @@ public extension UPModal where CustomContent == EmptyView {
         self.onCancelOnAsync = onCancelOnAsync
         self.hasCustomContent = false
         self.customContent = EmptyView()
+        self.confirmButtonContent = nil
+        self.popupBottomContent = nil
     }
 }
 
 public extension UPModal {
+    var hasConfirmButtonSlot: Bool { confirmButtonContent != nil }
+    var hasPopupBottomSlot: Bool { popupBottomContent != nil }
+
+    /// Maps uview-plus' named `confirmButton` slot to a SwiftUI view builder.
+    func confirmButton<Slot: View>(@ViewBuilder _ content: () -> Slot) -> UPModal {
+        var copy = self
+        copy.confirmButtonContent = AnyView(content())
+        return copy
+    }
+
+    /// Maps uview-plus' named `popupBottom` slot through to `u-popup`'s bottom slot.
+    func popupBottom<Slot: View>(@ViewBuilder _ content: () -> Slot) -> UPModal {
+        var copy = self
+        copy.popupBottomContent = AnyView(content())
+        return copy
+    }
+
     func onConfirm(_ action: @escaping () -> Void) -> UPModal { var c = self; c.onConfirm = action; return c }
     func onCancel(_ action: @escaping () -> Void) -> UPModal { var c = self; c.onCancel = action; return c }
     func onClose(_ action: @escaping () -> Void) -> UPModal { var c = self; c.onClose = action; return c }

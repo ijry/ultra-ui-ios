@@ -7,6 +7,11 @@ public struct UPForm<Content: View>: View {
     var rules: UPFormRules
     var controller: UPFormController?
     var errorType: String
+    var borderBottom: Bool
+    var labelPosition: String
+    var labelWidth: String
+    var labelAlign: String
+    var labelStyle: UPStyle
     @ViewBuilder var content: () -> Content
 
     @StateObject private var context: UPFormContext
@@ -15,11 +20,21 @@ public struct UPForm<Content: View>: View {
                 rules: UPFormRules = [:],
                 controller: UPFormController? = nil,
                 errorType: String = UPConfig.form.errorType,
+                borderBottom: Bool = UPConfig.form.borderBottom,
+                labelPosition: String = UPConfig.form.labelPosition,
+                labelWidth: String = UPConfig.form.labelWidth,
+                labelAlign: String = UPConfig.form.labelAlign,
+                labelStyle: UPStyle = UPConfig.form.labelStyle,
                 @ViewBuilder content: @escaping () -> Content) {
         self.model = model
         self.rules = rules
         self.controller = controller
         self.errorType = Self.resolvedErrorType(errorType)
+        self.borderBottom = borderBottom
+        self.labelPosition = Self.resolvedLabelPosition(labelPosition)
+        self.labelWidth = labelWidth
+        self.labelAlign = Self.resolvedLabelAlign(labelAlign)
+        self.labelStyle = labelStyle
         self.content = content
 
         let activeController = controller ?? UPFormController()
@@ -28,7 +43,12 @@ public struct UPForm<Content: View>: View {
                 model: model,
                 rules: rules,
                 controller: activeController,
-                errorType: errorType
+                errorType: errorType,
+                borderBottom: borderBottom,
+                labelPosition: labelPosition,
+                labelWidth: labelWidth,
+                labelAlign: labelAlign,
+                labelStyle: labelStyle
             )
         )
     }
@@ -37,22 +57,23 @@ public struct UPForm<Content: View>: View {
         content()
             .environmentObject(context)
             .environment(\.upFormContext, context)
-            .onAppear {
-                synchronizeContext()
-            }
-            .onChange(of: model.wrappedValue) { _, _ in
-                synchronizeContext()
-            }
-            .onChange(of: errorType) { _, _ in
-                synchronizeContext()
-            }
-            .onChange(of: ruleSignature) { _, _ in
-                synchronizeContext()
-            }
+            .onAppear(perform: synchronizeContext)
+            .onChange(of: model.wrappedValue) { _, _ in synchronizeContext() }
+            .onChange(of: errorType) { _, _ in synchronizeContext() }
+            .onChange(of: ruleSignature) { _, _ in synchronizeContext() }
+            .onChange(of: presentationSignature) { _, _ in synchronizeContext() }
     }
 
     static func resolvedErrorType(_ errorType: String) -> String {
         UPFormContext.resolvedErrorType(errorType)
+    }
+
+    static func resolvedLabelPosition(_ labelPosition: String) -> String {
+        UPFormContext.resolvedLabelPosition(labelPosition)
+    }
+
+    static func resolvedLabelAlign(_ labelAlign: String) -> String {
+        UPFormContext.resolvedLabelAlign(labelAlign)
     }
 
     private var ruleSignature: String {
@@ -74,8 +95,31 @@ public struct UPForm<Content: View>: View {
         }.joined(separator: "\u{1C}")
     }
 
+    private var presentationSignature: String {
+        let style = labelStyle.properties
+            .sorted { $0.key < $1.key }
+            .map { "\($0.key)=\($0.value)" }
+            .joined(separator: "\u{1F}")
+        return [
+            borderBottom ? "1" : "0",
+            labelPosition,
+            labelWidth,
+            labelAlign,
+            style
+        ].joined(separator: "\u{1E}")
+    }
+
     private func synchronizeContext() {
-        context.update(model: model, rules: rules, errorType: errorType)
+        context.update(
+            model: model,
+            rules: rules,
+            errorType: errorType,
+            borderBottom: borderBottom,
+            labelPosition: labelPosition,
+            labelWidth: labelWidth,
+            labelAlign: labelAlign,
+            labelStyle: labelStyle
+        )
         context.connectController()
     }
 }

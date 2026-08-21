@@ -1,4 +1,5 @@
 import XCTest
+import SwiftUI
 @testable import UltraUI
 
 @MainActor
@@ -23,9 +24,9 @@ final class ButtonTests: XCTestCase {
 
     func testFontSizes() {
         XCTAssertEqual(UPButton.fontSize(for: "large"), 16)
-        XCTAssertEqual(UPButton.fontSize(for: "normal"), 15)
-        XCTAssertEqual(UPButton.fontSize(for: "small"), 14)
-        XCTAssertEqual(UPButton.fontSize(for: "mini"), 12)
+        XCTAssertEqual(UPButton.fontSize(for: "normal"), 14)
+        XCTAssertEqual(UPButton.fontSize(for: "small"), 12)
+        XCTAssertEqual(UPButton.fontSize(for: "mini"), 10)
     }
 
     func testOnClickModifierRegistersHandler() {
@@ -36,5 +37,22 @@ final class ButtonTests: XCTestCase {
 
         button.onClick?()
         XCTAssertEqual(callCount, 1)
+    }
+
+    func testDefaultSlotInitializerAcceptsCustomSwiftUIView() {
+        let button = UPButton {
+            Text("Custom label")
+        }
+
+        XCTAssertTrue(button.hasDefaultSlot)
+    }
+
+    func testThrottleAllowsLeadingTapRejectsTapInsideIntervalAndAllowsBoundary() {
+        var throttle = UPButtonTapThrottle()
+        let firstTap = Date(timeIntervalSinceReferenceDate: 1_000)
+
+        XCTAssertTrue(throttle.acceptsTap(at: firstTap, throttleTime: 500))
+        XCTAssertFalse(throttle.acceptsTap(at: firstTap.addingTimeInterval(0.499), throttleTime: 500))
+        XCTAssertTrue(throttle.acceptsTap(at: firstTap.addingTimeInterval(0.5), throttleTime: 500))
     }
 }

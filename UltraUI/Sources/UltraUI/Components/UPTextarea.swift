@@ -1,24 +1,55 @@
 import SwiftUI
 
-/// A uview-plus-style multiline input with optional form-path binding.
+/// A native SwiftUI counterpart of uview-plus `u-textarea`.
 @MainActor
 public struct UPTextarea: View {
+    // Native extension retained for form-path integrations.
     var prop: String
     var text: Binding<String>?
-    var placeholder: String
-    var maxlength: Int?
-    var count: Bool
-    var disabled: Bool
     var readonly: Bool
+
+    // uview-plus props.
+    var value: String
+    var modelValue: Binding<String>?
+    var placeholder: String
+    var placeholderClass: String
+    var placeholderStyle: UPStyle
     var height: Double
+    var confirmType: String
+    var disabled: Bool
+    var count: Bool
+    var focus: Bool
     var autoHeight: Bool
+    var fixed: Bool
+    var cursorSpacing: Double
+    var cursor: Int
+    var showConfirmBar: Bool
+    var selectionStart: Int
+    var selectionEnd: Int
+    var adjustPosition: Bool
+    var disableDefaultPadding: Bool
+    var holdKeyboard: Bool
+    var maxlength: Int?
+    var border: String
+    var formatter: ((String) -> String)?
+    var ignoreCompositionEvent: Bool
+
+    // Vue emits represented as typed closures.
+    var onLineChange: ((Int) -> Void)?
+    var onConfirm: ((String) -> Void)?
+    var onKeyboardHeightChange: ((Double) -> Void)?
+    var onChangeEvent: ((String) -> Void)?
+    var onFocusEvent: (() -> Void)?
+    var onBlurEvent: (() -> Void)?
+
+    // Earlier native modifier hooks.
     var onChangeHandler: ((String) -> Void)?
     var onFocusHandler: (() -> Void)?
     var onBlurHandler: (() -> Void)?
 
     @Environment(\.upFormContext) private var form
     @Environment(\.upTheme) private var theme
-    @State private var localText = ""
+    @State private var localText: String
     @FocusState private var isFocused: Bool
 
     public init(prop: String = UPConfig.textarea.prop,
@@ -29,16 +60,65 @@ public struct UPTextarea: View {
                 disabled: Bool = UPConfig.textarea.disabled,
                 readonly: Bool = UPConfig.textarea.readonly,
                 height: Double = UPConfig.textarea.height,
-                autoHeight: Bool = UPConfig.textarea.autoHeight) {
+                autoHeight: Bool = UPConfig.textarea.autoHeight,
+                modelValue: Binding<String>? = nil,
+                value: String = UPConfig.textarea.value,
+                placeholderClass: String = UPConfig.textarea.placeholderClass,
+                placeholderStyle: UPStyle = UPConfig.textarea.placeholderStyle,
+                confirmType: String = UPConfig.textarea.confirmType,
+                focus: Bool = UPConfig.textarea.focus,
+                fixed: Bool = UPConfig.textarea.fixed,
+                cursorSpacing: Double = UPConfig.textarea.cursorSpacing,
+                cursor: Int = UPConfig.textarea.cursor,
+                showConfirmBar: Bool = UPConfig.textarea.showConfirmBar,
+                selectionStart: Int = UPConfig.textarea.selectionStart,
+                selectionEnd: Int = UPConfig.textarea.selectionEnd,
+                adjustPosition: Bool = UPConfig.textarea.adjustPosition,
+                disableDefaultPadding: Bool = UPConfig.textarea.disableDefaultPadding,
+                holdKeyboard: Bool = UPConfig.textarea.holdKeyboard,
+                border: String = UPConfig.textarea.border,
+                formatter: ((String) -> String)? = nil,
+                ignoreCompositionEvent: Bool = UPConfig.textarea.ignoreCompositionEvent,
+                onLineChange: ((Int) -> Void)? = nil,
+                onConfirm: ((String) -> Void)? = nil,
+                onKeyboardHeightChange: ((Double) -> Void)? = nil,
+                onChange: ((String) -> Void)? = nil,
+                onFocus: (() -> Void)? = nil,
+                onBlur: (() -> Void)? = nil) {
         self.prop = prop
         self.text = text
-        self.placeholder = placeholder
-        self.maxlength = maxlength
-        self.count = count
-        self.disabled = disabled
         self.readonly = readonly
+        self.value = value
+        self.modelValue = modelValue
+        self.placeholder = placeholder
+        self.placeholderClass = placeholderClass
+        self.placeholderStyle = placeholderStyle
         self.height = height
+        self.confirmType = confirmType
+        self.disabled = disabled
+        self.count = count
+        self.focus = focus
         self.autoHeight = autoHeight
+        self.fixed = fixed
+        self.cursorSpacing = cursorSpacing
+        self.cursor = cursor
+        self.showConfirmBar = showConfirmBar
+        self.selectionStart = selectionStart
+        self.selectionEnd = selectionEnd
+        self.adjustPosition = adjustPosition
+        self.disableDefaultPadding = disableDefaultPadding
+        self.holdKeyboard = holdKeyboard
+        self.maxlength = maxlength
+        self.border = border
+        self.formatter = formatter
+        self.ignoreCompositionEvent = ignoreCompositionEvent
+        self.onLineChange = onLineChange
+        self.onConfirm = onConfirm
+        self.onKeyboardHeightChange = onKeyboardHeightChange
+        self.onChangeEvent = onChange
+        self.onFocusEvent = onFocus
+        self.onBlurEvent = onBlur
+        _localText = State(initialValue: value)
     }
 
     public var body: some View {
@@ -47,8 +127,9 @@ public struct UPTextarea: View {
                 if currentValue.isEmpty, !placeholder.isEmpty {
                     Text(placeholder)
                         .foregroundStyle(theme.tips)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
+                        .padding(.horizontal, disableDefaultPadding ? 0 : 12)
+                        .padding(.vertical, disableDefaultPadding ? 0 : 10)
+                        .upStyle(placeholderStyle)
                         .allowsHitTesting(false)
                 }
 
@@ -56,17 +137,27 @@ public struct UPTextarea: View {
                     .lineLimit(Self.resolvedLineLimit(autoHeight: autoHeight))
                     .focused($isFocused)
                     .fixedSize(horizontal: false, vertical: autoHeight)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, disableDefaultPadding ? 0 : 8)
+                    .padding(.vertical, disableDefaultPadding ? 0 : 8)
+                    .onSubmit(confirmValue)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .frame(minHeight: autoHeight ? nil : max(0, height), alignment: .topLeading)
             .foregroundStyle(disabled ? theme.disabled : theme.main)
             .overlay {
-                RoundedRectangle(cornerRadius: 4)
-                    .stroke(theme.border, lineWidth: 1)
+                if UPInput.resolvedBorder(border) == "surround" {
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(theme.border, lineWidth: 1)
+                }
             }
-            .disabled(disabled)
+            .overlay(alignment: .bottom) {
+                if UPInput.resolvedBorder(border) == "bottom" {
+                    Rectangle()
+                        .fill(theme.border)
+                        .frame(height: 0.5)
+                }
+            }
+            .disabled(disabled || readonly)
 
             if count {
                 Text(countText)
@@ -74,14 +165,26 @@ public struct UPTextarea: View {
                     .foregroundStyle(theme.tips)
             }
         }
+        .onAppear {
+            if focus && !disabled && !readonly {
+                isFocused = true
+            }
+        }
+        .onChange(of: focus) { _, requestedFocus in
+            if !disabled && !readonly {
+                isFocused = requestedFocus
+            }
+        }
         .onChange(of: isFocused) { _, focused in
             if focused {
                 onFocusHandler?()
+                onFocusEvent?()
             } else {
                 if !prop.isEmpty, let form {
                     _ = form.validate(prop: prop, trigger: "blur")
                 }
                 onBlurHandler?()
+                onBlurEvent?()
             }
         }
     }
@@ -99,10 +202,24 @@ public struct UPTextarea: View {
                       form: UPFormContext?,
                       directText: Binding<String>?,
                       fallbackText: Binding<String>) -> String {
+        value(
+            prop: prop,
+            form: form,
+            modelValue: nil,
+            directText: directText,
+            fallbackText: fallbackText
+        )
+    }
+
+    static func value(prop: String,
+                      form: UPFormContext?,
+                      modelValue: Binding<String>?,
+                      directText: Binding<String>?,
+                      fallbackText: Binding<String>) -> String {
         if !prop.isEmpty, let form {
             return form.value(for: prop).stringValue
         }
-        return directText?.wrappedValue ?? fallbackText.wrappedValue
+        return modelValue?.wrappedValue ?? directText?.wrappedValue ?? fallbackText.wrappedValue
     }
 
     static func commit(_ proposedValue: String,
@@ -113,37 +230,78 @@ public struct UPTextarea: View {
                        maxlength: Int?,
                        readonly: Bool,
                        onChange: ((String) -> Void)?) {
+        commit(
+            proposedValue,
+            prop: prop,
+            form: form,
+            modelValue: nil,
+            directText: directText,
+            fallbackText: fallbackText,
+            maxlength: maxlength,
+            readonly: readonly,
+            formatter: nil,
+            onChange: onChange,
+            onLineChange: nil
+        )
+    }
+
+    static func commit(_ proposedValue: String,
+                       prop: String,
+                       form: UPFormContext?,
+                       modelValue: Binding<String>?,
+                       directText: Binding<String>?,
+                       fallbackText: Binding<String>,
+                       maxlength: Int?,
+                       readonly: Bool,
+                       formatter: ((String) -> String)?,
+                       onChange: ((String) -> Void)?,
+                       onLineChange: ((Int) -> Void)?) {
         guard !readonly else { return }
 
-        let value = truncated(proposedValue, maxlength: maxlength)
+        let formatted = formatter?(proposedValue) ?? proposedValue
+        let resolvedValue = truncated(formatted, maxlength: maxlength)
         if !prop.isEmpty, let form {
-            form.set(.string(value), for: prop, trigger: "change")
+            form.set(.string(resolvedValue), for: prop, trigger: "change")
+        } else if let modelValue {
+            modelValue.wrappedValue = resolvedValue
         } else if let directText {
-            directText.wrappedValue = value
+            directText.wrappedValue = resolvedValue
         } else {
-            fallbackText.wrappedValue = value
+            fallbackText.wrappedValue = resolvedValue
         }
-        onChange?(value)
+        onChange?(resolvedValue)
+        onLineChange?(lineCount(in: resolvedValue))
     }
 
     private var currentValue: String {
-        Self.value(prop: prop, form: form, directText: text, fallbackText: $localText)
+        Self.value(
+            prop: prop,
+            form: form,
+            modelValue: modelValue,
+            directText: text,
+            fallbackText: $localText
+        )
     }
 
     private var textBinding: Binding<String> {
         let form = form
+        let modelValue = modelValue
         let directText = text
         let fallbackText = $localText
         let prop = prop
         let maxlength = maxlength
         let readonly = readonly
-        let onChange = onChangeHandler
+        let formatter = formatter
+        let onLineChange = onLineChange
+        let onChangeEvent = onChangeEvent
+        let onChangeHandler = onChangeHandler
 
         return Binding(
             get: {
                 Self.value(
                     prop: prop,
                     form: form,
+                    modelValue: modelValue,
                     directText: directText,
                     fallbackText: fallbackText
                 )
@@ -153,11 +311,17 @@ public struct UPTextarea: View {
                     proposedValue,
                     prop: prop,
                     form: form,
+                    modelValue: modelValue,
                     directText: directText,
                     fallbackText: fallbackText,
                     maxlength: maxlength,
                     readonly: readonly,
-                    onChange: onChange
+                    formatter: formatter,
+                    onChange: { value in
+                        onChangeEvent?(value)
+                        onChangeHandler?(value)
+                    },
+                    onLineChange: onLineChange
                 )
             }
         )
@@ -168,6 +332,15 @@ public struct UPTextarea: View {
             return "\(currentValue.count)/\(max(0, maxlength))"
         }
         return "\(currentValue.count)"
+    }
+
+    private func confirmValue() {
+        onConfirm?(currentValue)
+    }
+
+    private static func lineCount(in value: String) -> Int {
+        guard !value.isEmpty else { return 0 }
+        return value.split(whereSeparator: \.isNewline).count
     }
 }
 

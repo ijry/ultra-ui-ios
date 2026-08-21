@@ -83,7 +83,7 @@ public struct UPView<Content: View>: View {
         return copy
     }
 
-    func triggerClick() {
+    public func triggerClick() {
         onClickHandler?()
     }
 

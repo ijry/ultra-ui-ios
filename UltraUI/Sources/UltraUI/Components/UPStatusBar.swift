@@ -54,7 +54,7 @@ public struct UPStatusBar<Content: View>: View {
         return copy
     }
 
-    func reportHeight(safeAreaTop: CGFloat, statusBarHeight: CGFloat?) {
+    public func reportHeight(safeAreaTop: CGFloat, statusBarHeight: CGFloat?) {
         onUpdateHeightHandler?(resolvedHeight(safeAreaTop: safeAreaTop, statusBarHeight: statusBarHeight))
     }
 

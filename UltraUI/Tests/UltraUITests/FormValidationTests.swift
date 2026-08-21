@@ -111,6 +111,26 @@ final class FormValidationTests: XCTestCase {
         XCTAssertEqual(controller.errors["name"], "请输入姓名")
     }
 
+    func testRegisteredFormItemRulesOverrideFormRulesForTheSameProperty() {
+        let box = FormModelBox(["email": .string("")])
+        let controller = UPFormController()
+        let context = UPFormContext(
+            model: box.binding,
+            rules: ["email": [UPFormRule(min: 3, message: "表单规则")]],
+            controller: controller
+        )
+        context.connectController()
+
+        context.registerItemRules(
+            [UPFormRule(required: true, message: "表单项规则")],
+            for: "email",
+            registrationID: UUID()
+        )
+
+        XCTAssertFalse(controller.validateField("email"))
+        XCTAssertEqual(controller.errors["email"], "表单项规则")
+    }
+
     func testContextSetWritesModelAndValidatesOnlyChangeRules() {
         let box = FormModelBox(["name": .string("ready")])
         let controller = UPFormController()

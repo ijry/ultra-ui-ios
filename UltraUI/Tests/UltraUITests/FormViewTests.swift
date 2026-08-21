@@ -8,9 +8,10 @@ final class FormViewTests: XCTestCase {
         let form = UPForm(model: .constant([:])) { EmptyView() }
         let item = UPFormItem(label: "邮箱", prop: "account.email") { EmptyView() }
 
+        XCTAssertNil(UPConfig.formItem.borderBottom)
         XCTAssertEqual(form.errorType, "message")
         XCTAssertEqual(item.labelPosition, "left")
-        XCTAssertEqual(item.labelWidth, "90px")
+        XCTAssertEqual(item.labelWidth, "45px")
         XCTAssertTrue(item.borderBottom)
     }
 

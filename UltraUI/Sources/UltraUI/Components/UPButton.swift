@@ -1,5 +1,27 @@
 import SwiftUI
 
+/// Leading-edge millisecond throttle used by `UPButton` click handling.
+///
+/// This mirrors uview-plus `throttleTime`: the first tap is delivered,
+/// taps strictly inside the interval are ignored, and a tap at the interval
+/// boundary is delivered.
+struct UPButtonTapThrottle {
+    private(set) var lastAcceptedTap: Date?
+
+    mutating func acceptsTap(at date: Date, throttleTime: Double) -> Bool {
+        guard throttleTime > 0 else { return true }
+
+        if let lastAcceptedTap,
+           date.timeIntervalSince(lastAcceptedTap) < throttleTime / 1_000 {
+            return false
+        }
+
+        lastAcceptedTap = date
+        return true
+    }
+}
+
+/// Native SwiftUI counterpart of uview-plus `u-button`.
 public struct UPButton: View {
     var type: String
     var size: String
@@ -10,17 +32,40 @@ public struct UPButton: View {
     var loadingText: String
     var loadingMode: String
     var loadingSize: Double
+    // uni-app open capability props are accepted for source compatibility.
+    var openType: String
+    var formType: String
+    var appParameter: String
+    var hoverStopPropagation: Bool
+    var lang: String
+    var sessionFrom: String
+    var sendMessageTitle: String
+    var sendMessagePath: String
+    var sendMessageImg: String
+    var showMessageCard: Bool
+    var dataName: String
+    var throttleTime: Double
+    var hoverStartTime: Double
+    var hoverStayTime: Double
     var text: String
     var icon: String
     var iconColor: String
     var color: String
+    var stop: Bool
     var hairline: Bool
+    /// Native convenience retained from the first SwiftUI implementation.
     var block: Bool
-    var throttleTime: Double
     var onTap: (() -> Void)?
     var onClick: (() -> Void)?
+    var onGetPhoneNumber: (() -> Void)?
+    var onGetUserInfo: (() -> Void)?
+    var onError: (() -> Void)?
+    var onOpenSetting: (() -> Void)?
+    var onLaunchApp: (() -> Void)?
+    var onAgreePrivacyAuthorization: (() -> Void)?
+    private var defaultSlotContent: AnyView?
 
-    @State private var lastTap = Date.distantPast
+    @State private var tapThrottle = UPButtonTapThrottle()
     @Environment(\.upTheme) private var theme
 
     public init(type: String = UPConfig.button.type,
@@ -32,15 +77,35 @@ public struct UPButton: View {
                 loadingText: String = UPConfig.button.loadingText,
                 loadingMode: String = UPConfig.button.loadingMode,
                 loadingSize: Double = UPConfig.button.loadingSize,
+                openType: String = UPConfig.button.openType,
+                formType: String = UPConfig.button.formType,
+                appParameter: String = UPConfig.button.appParameter,
+                hoverStopPropagation: Bool = UPConfig.button.hoverStopPropagation,
+                lang: String = UPConfig.button.lang,
+                sessionFrom: String = UPConfig.button.sessionFrom,
+                sendMessageTitle: String = UPConfig.button.sendMessageTitle,
+                sendMessagePath: String = UPConfig.button.sendMessagePath,
+                sendMessageImg: String = UPConfig.button.sendMessageImg,
+                showMessageCard: Bool = UPConfig.button.showMessageCard,
+                dataName: String = UPConfig.button.dataName,
+                throttleTime: Double = UPConfig.button.throttleTime,
+                hoverStartTime: Double = UPConfig.button.hoverStartTime,
+                hoverStayTime: Double = UPConfig.button.hoverStayTime,
                 text: String = UPConfig.button.text,
                 icon: String = UPConfig.button.icon,
                 iconColor: String = UPConfig.button.iconColor,
                 color: String = UPConfig.button.color,
+                stop: Bool = UPConfig.button.stop,
                 hairline: Bool = UPConfig.button.hairline,
                 block: Bool = UPConfig.button.block,
-                throttleTime: Double = UPConfig.button.throttleTime,
                 onTap: (() -> Void)? = nil,
-                onClick: (() -> Void)? = nil) {
+                onClick: (() -> Void)? = nil,
+                onGetPhoneNumber: (() -> Void)? = nil,
+                onGetUserInfo: (() -> Void)? = nil,
+                onError: (() -> Void)? = nil,
+                onOpenSetting: (() -> Void)? = nil,
+                onLaunchApp: (() -> Void)? = nil,
+                onAgreePrivacyAuthorization: (() -> Void)? = nil) {
         self.type = type
         self.size = size
         self.shape = shape
@@ -50,15 +115,122 @@ public struct UPButton: View {
         self.loadingText = loadingText
         self.loadingMode = loadingMode
         self.loadingSize = loadingSize
+        self.openType = openType
+        self.formType = formType
+        self.appParameter = appParameter
+        self.hoverStopPropagation = hoverStopPropagation
+        self.lang = lang
+        self.sessionFrom = sessionFrom
+        self.sendMessageTitle = sendMessageTitle
+        self.sendMessagePath = sendMessagePath
+        self.sendMessageImg = sendMessageImg
+        self.showMessageCard = showMessageCard
+        self.dataName = dataName
+        self.throttleTime = throttleTime
+        self.hoverStartTime = hoverStartTime
+        self.hoverStayTime = hoverStayTime
         self.text = text
         self.icon = icon
         self.iconColor = iconColor
         self.color = color
+        self.stop = stop
         self.hairline = hairline
         self.block = block
-        self.throttleTime = throttleTime
         self.onTap = onTap
         self.onClick = onClick
+        self.onGetPhoneNumber = onGetPhoneNumber
+        self.onGetUserInfo = onGetUserInfo
+        self.onError = onError
+        self.onOpenSetting = onOpenSetting
+        self.onLaunchApp = onLaunchApp
+        self.onAgreePrivacyAuthorization = onAgreePrivacyAuthorization
+    }
+
+    /// SwiftUI mapping of uview-plus `u-button`'s default slot.
+    ///
+    /// The supplied content replaces `text` while the button is not loading.
+    public init<Content: View>(type: String = UPConfig.button.type,
+                               size: String = UPConfig.button.size,
+                               shape: String = UPConfig.button.shape,
+                               plain: Bool = UPConfig.button.plain,
+                               disabled: Bool = UPConfig.button.disabled,
+                               loading: Bool = UPConfig.button.loading,
+                               loadingText: String = UPConfig.button.loadingText,
+                               loadingMode: String = UPConfig.button.loadingMode,
+                               loadingSize: Double = UPConfig.button.loadingSize,
+                               openType: String = UPConfig.button.openType,
+                               formType: String = UPConfig.button.formType,
+                               appParameter: String = UPConfig.button.appParameter,
+                               hoverStopPropagation: Bool = UPConfig.button.hoverStopPropagation,
+                               lang: String = UPConfig.button.lang,
+                               sessionFrom: String = UPConfig.button.sessionFrom,
+                               sendMessageTitle: String = UPConfig.button.sendMessageTitle,
+                               sendMessagePath: String = UPConfig.button.sendMessagePath,
+                               sendMessageImg: String = UPConfig.button.sendMessageImg,
+                               showMessageCard: Bool = UPConfig.button.showMessageCard,
+                               dataName: String = UPConfig.button.dataName,
+                               throttleTime: Double = UPConfig.button.throttleTime,
+                               hoverStartTime: Double = UPConfig.button.hoverStartTime,
+                               hoverStayTime: Double = UPConfig.button.hoverStayTime,
+                               text: String = UPConfig.button.text,
+                               icon: String = UPConfig.button.icon,
+                               iconColor: String = UPConfig.button.iconColor,
+                               color: String = UPConfig.button.color,
+                               stop: Bool = UPConfig.button.stop,
+                               hairline: Bool = UPConfig.button.hairline,
+                               block: Bool = UPConfig.button.block,
+                               onTap: (() -> Void)? = nil,
+                               onClick: (() -> Void)? = nil,
+                               onGetPhoneNumber: (() -> Void)? = nil,
+                               onGetUserInfo: (() -> Void)? = nil,
+                               onError: (() -> Void)? = nil,
+                               onOpenSetting: (() -> Void)? = nil,
+                               onLaunchApp: (() -> Void)? = nil,
+                               onAgreePrivacyAuthorization: (() -> Void)? = nil,
+                               @ViewBuilder content: () -> Content) {
+        self.init(type: type,
+                  size: size,
+                  shape: shape,
+                  plain: plain,
+                  disabled: disabled,
+                  loading: loading,
+                  loadingText: loadingText,
+                  loadingMode: loadingMode,
+                  loadingSize: loadingSize,
+                  openType: openType,
+                  formType: formType,
+                  appParameter: appParameter,
+                  hoverStopPropagation: hoverStopPropagation,
+                  lang: lang,
+                  sessionFrom: sessionFrom,
+                  sendMessageTitle: sendMessageTitle,
+                  sendMessagePath: sendMessagePath,
+                  sendMessageImg: sendMessageImg,
+                  showMessageCard: showMessageCard,
+                  dataName: dataName,
+                  throttleTime: throttleTime,
+                  hoverStartTime: hoverStartTime,
+                  hoverStayTime: hoverStayTime,
+                  text: text,
+                  icon: icon,
+                  iconColor: iconColor,
+                  color: color,
+                  stop: stop,
+                  hairline: hairline,
+                  block: block,
+                  onTap: onTap,
+                  onClick: onClick,
+                  onGetPhoneNumber: onGetPhoneNumber,
+                  onGetUserInfo: onGetUserInfo,
+                  onError: onError,
+                  onOpenSetting: onOpenSetting,
+                  onLaunchApp: onLaunchApp,
+                  onAgreePrivacyAuthorization: onAgreePrivacyAuthorization)
+        defaultSlotContent = AnyView(content())
+    }
+
+    var hasDefaultSlot: Bool {
+        defaultSlotContent != nil
     }
 
     public static func height(for size: String) -> CGFloat {
@@ -73,9 +245,9 @@ public struct UPButton: View {
     public static func fontSize(for size: String) -> CGFloat {
         switch size {
         case "large": return 16
-        case "small": return 14
-        case "mini": return 12
-        default: return 15
+        case "small": return 12
+        case "mini": return 10
+        default: return 14
         }
     }
 
@@ -92,7 +264,11 @@ public struct UPButton: View {
                            color: iconColor.isEmpty ? foregroundColor.upHexString : iconColor,
                            size: "\(loadingSize)px")
                 }
-                if !displayText.isEmpty {
+                if let defaultSlotContent, !loading {
+                    defaultSlotContent
+                        .font(.system(size: Self.fontSize(for: size)))
+                        .foregroundStyle(foregroundColor)
+                } else if !displayText.isEmpty {
                     Text(displayText)
                         .font(.system(size: Self.fontSize(for: size)))
                         .foregroundStyle(foregroundColor)
@@ -167,11 +343,7 @@ public struct UPButton: View {
 
     private func handleTap() {
         guard !disabled, !loading else { return }
-        if throttleTime > 0 {
-            let now = Date()
-            if now.timeIntervalSince(lastTap) < throttleTime / 1000 { return }
-            lastTap = now
-        }
+        guard tapThrottle.acceptsTap(at: Date(), throttleTime: throttleTime) else { return }
         onTap?()
         onClick?()
     }

@@ -12,6 +12,7 @@ final class InputTests: XCTestCase {
         XCTAssertFalse(input.clearable)
         XCTAssertEqual(UPInput.truncated("abcdef", maxlength: 4), "abcd")
         XCTAssertEqual(UPInput.truncated("abcdef", maxlength: nil), "abcdef")
+        XCTAssertEqual(UPInput.truncated("abcdef", maxlength: -1), "abcdef")
         XCTAssertEqual(UPInput.truncated("abcdef", maxlength: 0), "")
     }
 
@@ -94,6 +95,51 @@ final class InputTests: XCTestCase {
         )
         XCTAssertEqual(directBox.value, "abc")
         XCTAssertEqual(changes, ["abc"])
+    }
+
+    func testFormPropValueTakesPrecedenceOverModelValueAndLegacyBindings() {
+        let formBox = InputModelBox(["name": .string("form")])
+        let form = UPFormContext(model: formBox.binding, controller: UPFormController())
+        let modelValueBox = InputTextBox("model")
+        let legacyTextBox = InputTextBox("legacy")
+        let localTextBox = InputTextBox("local")
+
+        XCTAssertEqual(
+            UPInput.value(
+                prop: "name",
+                form: form,
+                modelValue: modelValueBox.binding,
+                directText: legacyTextBox.binding,
+                fallbackText: localTextBox.binding
+            ),
+            "form"
+        )
+    }
+
+    func testCommitFormatsTruncatesAndEmitsInputAndChangeEvents() {
+        let modelValueBox = InputTextBox("old")
+        let localTextBox = InputTextBox("local")
+        var inputEvents: [String] = []
+        var changeEvents: [String] = []
+
+        UPInput.commit(
+            " a b c d ",
+            prop: "",
+            form: nil,
+            modelValue: modelValueBox.binding,
+            directText: nil,
+            fallbackText: localTextBox.binding,
+            maxlength: 3,
+            readonly: false,
+            formatter: { $0.replacingOccurrences(of: " ", with: "").uppercased() },
+            onInput: { inputEvents.append($0) },
+            onChange: { changeEvents.append($0) }
+        )
+
+        XCTAssertEqual(modelValueBox.value, "ABC")
+        XCTAssertEqual(localTextBox.value, "local")
+        XCTAssertEqual(inputEvents, ["ABC"])
+        XCTAssertEqual(changeEvents, ["ABC"])
     }
 
     func testUnknownBorderAndTypeUseSafeFallbacks() {
