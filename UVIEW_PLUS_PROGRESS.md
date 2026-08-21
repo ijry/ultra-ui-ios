@@ -2,7 +2,7 @@
 
 > 最后更新：2026-08-21
 > 上游基线：uview-plus `3.8.86`，以 `components/u-*` 目录为完整清单
-> iOS 基线：`main` / `94d6766`
+> iOS 基线：`main` / `e26fc1e`
 
 ## 总览
 
@@ -136,15 +136,15 @@
 | 103 | `u-short-video` | `UPShortVideo` | ✅ 已完成 | 基线可用 | 视频播放、手势和预加载，复杂原生能力 |
 | 104 | `u-signature` | `UPSignature` | ✅ 已完成 | 基线可用 | Canvas/触摸签名与图片导出 |
 | 105 | `u-skeleton` | `UPSkeleton` | ✅ 已完成 | 高 | rows/title/avatar、尺寸数组、loading 插槽已覆盖 |
-| 106 | `u-slider` | `UPSlider` | ✅ 已完成 | 基线可用 | 可封装原生 Slider，需保持 step/range 事件语义 |
+| 106 | `u-slider` | `UPSlider` | ✅ 已完成 | 中高 | String/Number、单值/区间 Binding、step 归一化及 start/changing/change 区间 payload 已覆盖（`e26fc1e`） |
 | 107 | `u-status-bar` | `UPStatusBar` | ✅ 已完成 | 基线可用 | 可映射 safe area 顶部 inset |
 | 108 | `u-steps` | `UPSteps` | ✅ 已完成 | 基线可用 | 与 steps-item 配套 |
 | 109 | `u-steps-item` | `UPStepsItem` | ✅ 已完成 | 基线可用 | 步骤子项与父子上下文 |
 | 110 | `u-sticky` | `UPSticky` | ✅ 已完成 | 基线可用 | SwiftUI pinned views 与上游 offset 语义适配 |
-| 111 | `u-subsection` | `UPSubsection` | ✅ 已完成 | 基线可用 | 分段选择器，可参考原生 Picker segmented style |
+| 111 | `u-subsection` | `UPSubsection` | ✅ 已完成 | 中高 | current Binding、禁用/去重、公开选中索引及结构化 change payload 已覆盖（`e26fc1e`） |
 | 112 | `u-swipe-action` | `UPSwipeAction` | ✅ 已完成 | 基线可用 | 与 swipe-action-item 配套及互斥状态 |
 | 113 | `u-swipe-action-item` | `UPSwipeActionItem` | ✅ 已完成 | 基线可用 | 侧滑菜单、阈值和事件 payload |
-| 114 | `u-swiper` | `UPSwiper` | ✅ 已完成 | 基线可用 | 可映射 TabView/page，需兼容 indicator 和事件 |
+| 114 | `u-swiper` | `UPSwiper` | ✅ 已完成 | 中高 | current Binding/currentItemId、原生 TabView 回写、change/click payload 和循环导航已覆盖；平台动画细节采用原生语义（`e26fc1e`） |
 | 115 | `u-swiper-indicator` | `UPSwiperIndicator` | ✅ 已完成 | 基线可用 | Swiper 指示器辅助组件 |
 | 116 | `u-switch` | `UPSwitch` | ✅ 已完成 | 高 | active/inactive value、loading/disabled、change 已覆盖 |
 | 117 | `u-tabbar` | `UPTabbar` | ✅ 已完成 | 基线可用 | 与 tabbar-item 配套，需原生安全区处理 |
