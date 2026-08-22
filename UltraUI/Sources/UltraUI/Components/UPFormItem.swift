@@ -21,6 +21,13 @@ public struct UPFormItem<Content: View>: View {
     private var inheritsLabelPosition: Bool
     private var inheritsLabelWidth: Bool
 
+    // Upstream `label` and `error` named slots.
+    private var labelContent: AnyView?
+    private var errorContent: AnyView?
+
+    var hasLabelSlot: Bool { labelContent != nil }
+    var hasErrorSlot: Bool { errorContent != nil }
+
     @Environment(\.upFormContext) private var form
     @Environment(\.upTheme) private var theme
     @State private var ruleRegistrationID = UUID()
@@ -117,14 +124,16 @@ public struct UPFormItem<Content: View>: View {
             }
 
             let error = form?.errors[prop] ?? ""
-            if Self.shouldShowError(errorType: form?.errorType ?? UPConfig.form.errorType, error: error) {
+            if let errorContent, !error.isEmpty {
+                errorContent
+            } else if Self.shouldShowError(errorType: form?.errorType ?? UPConfig.form.errorType, error: error) {
                 Text(error)
                     .font(.system(size: 12))
                     .foregroundStyle(theme.error)
             }
 
             if effectiveBorderBottom {
-                UPLine()
+                UPLine(color: tintsBorder ? "#f56c6c" : UPConfig.line.color)
             }
         }
         .padding(.vertical, 10)
@@ -146,6 +155,12 @@ public struct UPFormItem<Content: View>: View {
 
     static func shouldShowError(errorType: String, error: String) -> Bool {
         !error.isEmpty && UPFormContext.resolvedErrorType(errorType) == "message"
+    }
+
+    /// `border-bottom` reports the failure by tinting the underline red rather
+    /// than printing a message below the field.
+    static func shouldTintBorder(errorType: String, error: String) -> Bool {
+        !error.isEmpty && UPFormContext.resolvedErrorType(errorType) == "border-bottom"
     }
 
     private var itemRulesSignature: String {
@@ -216,7 +231,11 @@ public struct UPFormItem<Content: View>: View {
 
     @ViewBuilder
     private var labelView: some View {
-        if !label.isEmpty {
+        if let labelContent {
+            labelContent
+                .frame(maxWidth: .infinity, alignment: labelFrameAlignment)
+                .upStyle(effectiveLabelStyle)
+        } else if !label.isEmpty {
             HStack(spacing: 2) {
                 if required {
                     Text("*")
@@ -229,6 +248,30 @@ public struct UPFormItem<Content: View>: View {
             .frame(maxWidth: .infinity, alignment: labelFrameAlignment)
             .upStyle(effectiveLabelStyle)
         }
+    }
+
+    private var tintsBorder: Bool {
+        Self.shouldTintBorder(
+            errorType: form?.errorType ?? UPConfig.form.errorType,
+            error: form?.errors[prop] ?? ""
+        )
+    }
+}
+
+public extension UPFormItem {
+    /// Upstream `label` named slot, replacing the built-in label rendering.
+    func label<Slot: View>(@ViewBuilder _ content: () -> Slot) -> UPFormItem {
+        var copy = self
+        copy.labelContent = AnyView(content())
+        return copy
+    }
+
+    /// Upstream `error` named slot, replacing the built-in message rendering
+    /// while an error is present.
+    func error<Slot: View>(@ViewBuilder _ content: () -> Slot) -> UPFormItem {
+        var copy = self
+        copy.errorContent = AnyView(content())
+        return copy
     }
 }
 

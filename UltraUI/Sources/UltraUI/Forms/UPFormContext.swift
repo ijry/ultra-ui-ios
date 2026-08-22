@@ -24,6 +24,10 @@ public final class UPFormContext: ObservableObject {
     private var itemRuleRegistrations: [UUID: ItemRuleRegistration] = [:]
     private var itemRuleRegistrationOrder: [UUID] = []
 
+    /// Snapshot of the model taken when the form was created, corresponding to
+    /// upstream's `originalModel`. `resetFields` and `resetField` restore from it.
+    private var originalModel: UPFormModel
+
     public init(model: Binding<UPFormModel>,
                 rules: UPFormRules = [:],
                 controller: UPFormController,
@@ -36,6 +40,7 @@ public final class UPFormContext: ObservableObject {
         self.model = model
         self.rules = rules
         self.controller = controller
+        self.originalModel = model.wrappedValue
         self.errorType = Self.resolvedErrorType(errorType)
         self.borderBottom = borderBottom
         self.labelPosition = Self.resolvedLabelPosition(labelPosition)
@@ -126,6 +131,21 @@ public final class UPFormContext: ObservableObject {
         }
     }
 
+    /// The message upstream passes to `toast()` when `errorType` is `toast`.
+    /// Upstream reports the first error; properties are sorted so the choice is
+    /// deterministic across dictionary orderings.
+    public static func toastMessage(errorType: String, errors: [String: String]) -> String? {
+        guard resolvedErrorType(errorType) == "toast" else { return nil }
+        guard let prop = errors.keys.sorted().first else { return nil }
+        return errors[prop]
+    }
+
+    /// The first error to surface through the toast centre, or nil when the
+    /// form is valid or not in `toast` mode.
+    public var toastMessage: String? {
+        Self.toastMessage(errorType: errorType, errors: errors)
+    }
+
     /// Resolves a uview-plus-style dotted property path from the bound model.
     public func value(for prop: String) -> UPFormValue {
         UPFormValue.value(at: prop, in: model.wrappedValue)
@@ -139,14 +159,17 @@ public final class UPFormContext: ObservableObject {
         _ = validate(prop: prop, trigger: trigger)
     }
 
-    /// Validates a field. Set `force` to ignore per-rule trigger filters.
+    /// Validates a field. Set `force` to ignore per-rule trigger filters, and
+    /// `showErrorMsg` to false to report validity without recording a message
+    /// (upstream `validate({showErrorMsg: false})`).
     @discardableResult
     public func validate(prop: String,
                          trigger: String = "submit",
-                         force: Bool = false) -> Bool {
+                         force: Bool = false,
+                         showErrorMsg: Bool = true) -> Bool {
         let fieldRules = effectiveRules(for: prop)
         guard !fieldRules.isEmpty else {
-            removeError(for: prop)
+            if showErrorMsg { removeError(for: prop) }
             return true
         }
 
@@ -159,12 +182,12 @@ public final class UPFormContext: ObservableObject {
         let currentValue = UPFormValue.value(at: prop, in: currentModel)
         for rule in rulesToEvaluate {
             if let error = rule.errorMessage(for: currentValue, model: currentModel) {
-                setError(error, for: prop)
+                if showErrorMsg { setError(error, for: prop) }
                 return false
             }
         }
 
-        removeError(for: prop)
+        if showErrorMsg { removeError(for: prop) }
         return true
     }
 
@@ -180,10 +203,38 @@ public final class UPFormContext: ObservableObject {
         mirrorErrorsToController()
     }
 
-    func validateAll() -> Bool {
+    /// Replaces the form-level rules. Mirrors upstream `setRules`, which exists
+    /// because小程序 cannot pass functions through props.
+    public func setRules(_ rules: UPFormRules) {
+        self.rules = rules
+        reconcileErrorsForCurrentRules()
+    }
+
+    /// Restores every property present in the original snapshot and clears the
+    /// validation messages, matching upstream `resetFields`.
+    public func resetFields() {
+        model.wrappedValue = originalModel
+        clearValidate()
+    }
+
+    /// Restores a single property from the original snapshot and clears its
+    /// error, matching upstream `resetField`.
+    public func resetField(_ prop: String) {
+        guard !prop.isEmpty else { return }
+        var updatedModel = model.wrappedValue
+        UPFormValue.set(
+            UPFormValue.value(at: prop, in: originalModel),
+            at: prop,
+            in: &updatedModel
+        )
+        model.wrappedValue = updatedModel
+        removeError(for: prop)
+    }
+
+    func validateAll(showErrorMsg: Bool = true) -> Bool {
         var isValid = true
         for prop in activeRuleProperties.sorted() {
-            if !validate(prop: prop, force: true) {
+            if !validate(prop: prop, force: true, showErrorMsg: showErrorMsg) {
                 isValid = false
             }
         }

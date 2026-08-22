@@ -191,6 +191,94 @@ final class FormValidationTests: XCTestCase {
         XCTAssertFalse(controller.validateField("name"))
         XCTAssertEqual(controller.errors["name"], "至少 3 个字符")
     }
+
+    /// Upstream `resetFields` restores the model from the snapshot taken when
+    /// the form was created, and clears the validation messages.
+    func testResetFieldsRestoresTheOriginalModelSnapshotAndClearsErrors() {
+        let box = FormModelBox(["profile": .object(["name": .string("original")])])
+        let controller = UPFormController()
+        let context = UPFormContext(
+            model: box.binding,
+            rules: ["profile.name": [UPFormRule(min: 4, message: "至少 4 个字符")]],
+            controller: controller
+        )
+        context.connectController()
+
+        context.set(.string("ab"), for: "profile.name")
+        XCTAssertFalse(controller.validateField("profile.name"))
+        XCTAssertEqual(controller.errors["profile.name"], "至少 4 个字符")
+
+        controller.resetFields()
+
+        XCTAssertEqual(UPFormValue.value(at: "profile.name", in: box.model), .string("original"))
+        XCTAssertTrue(controller.errors.isEmpty)
+    }
+
+    /// Upstream `resetField` on a single form-item restores only that property.
+    func testResetFieldRestoresOnlyTheNamedProperty() {
+        let box = FormModelBox(["first": .string("a"), "second": .string("b")])
+        let controller = UPFormController()
+        let context = UPFormContext(model: box.binding, controller: controller)
+        context.connectController()
+
+        context.set(.string("changed-1"), for: "first")
+        context.set(.string("changed-2"), for: "second")
+
+        controller.resetField("first")
+
+        XCTAssertEqual(UPFormValue.value(at: "first", in: box.model), .string("a"))
+        XCTAssertEqual(UPFormValue.value(at: "second", in: box.model), .string("changed-2"))
+    }
+
+    /// Upstream `setRules` exists because小程序 cannot pass functions as props.
+    func testSetRulesReplacesTheFormLevelRules() {
+        let box = FormModelBox(["code": .string("ab")])
+        let controller = UPFormController()
+        let context = UPFormContext(model: box.binding, controller: controller)
+        context.connectController()
+
+        XCTAssertTrue(controller.validateField("code"))
+
+        controller.setRules(["code": [UPFormRule(min: 4, message: "至少 4 个字符")]])
+
+        XCTAssertFalse(controller.validateField("code"))
+        XCTAssertEqual(controller.errors["code"], "至少 4 个字符")
+    }
+
+    /// Upstream `validate({showErrorMsg: false})` reports validity without
+    /// writing the messages into the form items.
+    func testValidateCanSuppressErrorMessages() {
+        let box = FormModelBox(["email": .string("")])
+        let controller = UPFormController()
+        let context = UPFormContext(
+            model: box.binding,
+            rules: ["email": [UPFormRule(required: true, message: "请输入邮箱")]],
+            controller: controller
+        )
+        context.connectController()
+
+        XCTAssertFalse(controller.validate(showErrorMsg: false))
+        XCTAssertTrue(controller.errors.isEmpty)
+
+        XCTAssertFalse(controller.validate())
+        XCTAssertEqual(controller.errors["email"], "请输入邮箱")
+    }
+
+    /// `UPForm` re-runs `update` on every model change, so the snapshot must be
+    /// captured once at init or `resetFields` would restore the latest edit.
+    func testSnapshotSurvivesContextUpdates() {
+        let box = FormModelBox(["name": .string("original")])
+        let controller = UPFormController()
+        let context = UPFormContext(model: box.binding, controller: controller)
+        context.connectController()
+
+        context.set(.string("edited"), for: "name")
+        context.update(model: box.binding, rules: [:], errorType: "message")
+
+        controller.resetFields()
+
+        XCTAssertEqual(UPFormValue.value(at: "name", in: box.model), .string("original"))
+    }
 }
 
 @MainActor

@@ -45,6 +45,70 @@ final class FormViewTests: XCTestCase {
         XCTAssertFalse(controller.validateField("name"))
         XCTAssertEqual(controller.errors["name"], "请输入姓名")
     }
+
+    /// `border-bottom` turns the field underline red instead of printing a
+    /// message; `toast` and `none` print nothing inline.
+    func testBorderBottomErrorTypeTintsTheUnderlineInsteadOfPrintingAMessage() {
+        XCTAssertTrue(
+            UPFormItem<EmptyView>.shouldTintBorder(errorType: "border-bottom", error: "请输入邮箱")
+        )
+        XCTAssertFalse(
+            UPFormItem<EmptyView>.shouldTintBorder(errorType: "border-bottom", error: "")
+        )
+        XCTAssertFalse(
+            UPFormItem<EmptyView>.shouldTintBorder(errorType: "message", error: "请输入邮箱")
+        )
+        XCTAssertFalse(
+            UPFormItem<EmptyView>.shouldShowError(errorType: "border-bottom", error: "请输入邮箱")
+        )
+        XCTAssertFalse(
+            UPFormItem<EmptyView>.shouldShowError(errorType: "toast", error: "请输入邮箱")
+        )
+    }
+
+    /// Upstream `errorType: 'toast'` surfaces the first error through the toast
+    /// centre rather than inline.
+    func testToastErrorTypeRoutesTheFirstErrorToTheToastCentre() {
+        XCTAssertEqual(
+            UPFormContext.toastMessage(errorType: "toast", errors: ["b": "第二个", "a": "第一个"]),
+            "第一个"
+        )
+        XCTAssertNil(UPFormContext.toastMessage(errorType: "message", errors: ["a": "第一个"]))
+        XCTAssertNil(UPFormContext.toastMessage(errorType: "toast", errors: [:]))
+    }
+
+    /// The instance property is what a host observes to drive its `UPToastCenter`;
+    /// presentation stays host-owned, as it is for every other component.
+    func testContextExposesTheToastMessageForTheHostToPresent() {
+        let box = FormModelBox(["email": .string("")])
+        let controller = UPFormController()
+        let context = UPFormContext(
+            model: box.binding,
+            rules: ["email": [UPFormRule(required: true, message: "请输入邮箱")]],
+            controller: controller,
+            errorType: "toast"
+        )
+        context.connectController()
+
+        XCTAssertNil(context.toastMessage)
+
+        XCTAssertFalse(controller.validate())
+
+        XCTAssertEqual(context.toastMessage, "请输入邮箱")
+    }
+
+    func testLabelAndErrorSlotsRecordTheirContent() {
+        let plain = UPFormItem(label: "邮箱", prop: "email") { EmptyView() }
+        XCTAssertFalse(plain.hasLabelSlot)
+        XCTAssertFalse(plain.hasErrorSlot)
+
+        let slotted = UPFormItem(label: "邮箱", prop: "email") { EmptyView() }
+            .label { Text("自定义标签") }
+            .error { Text("自定义错误") }
+
+        XCTAssertTrue(slotted.hasLabelSlot)
+        XCTAssertTrue(slotted.hasErrorSlot)
+    }
 }
 
 @MainActor
