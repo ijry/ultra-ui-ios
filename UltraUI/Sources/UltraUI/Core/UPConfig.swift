@@ -776,4 +776,46 @@ public enum UPConfig {
         public static let error = false
     }
 
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-notice-bar`.
+    public enum noticeBar {
+        public static let direction = "row"
+        public static let step = false
+        public static let icon = "volume"
+        public static let mode = ""
+        public static let color = "#f9ae3d"
+        public static let bgColor = "#fdf6ec"
+        public static let speed: Double = 80
+        public static let fontSize: Double = 14
+        public static let duration: Double = 2000
+        public static let disableTouch = true
+        public static let url = ""
+        public static let linkType = "navigateTo"
+        public static let justifyContent = "flex-start"
+    }
+
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-column-notice`.
+    /// Note the shorter `duration` than `noticeBar`.
+    public enum columnNotice {
+        public static let icon = "volume"
+        public static let mode = ""
+        public static let color = "#f9ae3d"
+        public static let bgColor = "#fdf6ec"
+        public static let fontSize: Double = 14
+        public static let speed: Double = 80
+        public static let step = false
+        public static let duration: Double = 1500
+        public static let disableTouch = true
+        public static let justifyContent = "flex-start"
+    }
+
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-row-notice`.
+    public enum rowNotice {
+        public static let icon = "volume"
+        public static let mode = ""
+        public static let color = "#f9ae3d"
+        public static let bgColor = "#fdf6ec"
+        public static let fontSize: Double = 14
+        public static let speed: Double = 80
+    }
+
 }
