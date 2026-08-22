@@ -50,18 +50,39 @@ final class KeyboardTests: XCTestCase {
 }
 @MainActor
 final class MessageInputTests: XCTestCase {
-    func testMessageInputTruncatesAndEmitsFinish() {
+    /// Upstream `getVal` stores the raw value but returns early when it is
+    /// longer than `maxlength`, so neither `change` nor `finish` is emitted.
+    func testMessageInputRejectsOverLengthInputWithoutEmittingEvents() {
         let value = StringBox("")
-        var changed = ""
-        var finished = ""
+        var changes: [String] = []
+        var finishes: [String] = []
         let input = UPMessageInput(modelValue: value.binding, maxlength: 4)
-            .onChange { changed = $0 }
-            .onFinish { finished = $0 }
+            .onChange { changes.append($0) }
+            .onFinish { finishes.append($0) }
 
         input.input("hello")
-        XCTAssertEqual(value.value, "hell")
-        XCTAssertEqual(changed, "hell")
-        XCTAssertEqual(finished, "hell")
+        XCTAssertTrue(changes.isEmpty)
+        XCTAssertTrue(finishes.isEmpty)
+
+        input.input("123")
+        XCTAssertEqual(value.value, "123")
+        XCTAssertEqual(changes, ["123"])
+        XCTAssertTrue(finishes.isEmpty)
+
+        input.input("1234")
+        XCTAssertEqual(value.value, "1234")
+        XCTAssertEqual(changes, ["123", "1234"])
+        XCTAssertEqual(finishes, ["1234"])
+    }
+
+    /// The upstream `modelValue` watcher truncates with `substring`, so an
+    /// external write is clamped even though user input of the same length is
+    /// rejected outright.
+    func testExternalModelValueIsTruncatedUnlikeUserInput() {
+        let value = StringBox("123456")
+        let input = UPMessageInput(modelValue: value.binding, maxlength: 4)
+
+        XCTAssertEqual(input.inputValue, "1234")
     }
 
     func testMessageInputFocusAndDisabledState() {
@@ -76,7 +97,72 @@ final class MessageInputTests: XCTestCase {
         XCTAssertEqual(blurred, 1)
 
         let disabled = UPMessageInput(disabled: true)
-        disabled.input("ignored")
+        disabled.input("12")
         XCTAssertEqual(disabled.inputValue, "")
+    }
+
+    func testDisabledKeyboardIgnoresInputButKeepsExternalValue() {
+        let value = StringBox("12")
+        var changes: [String] = []
+        let input = UPMessageInput(modelValue: value.binding, maxlength: 4, disabledKeyboard: true)
+            .onChange { changes.append($0) }
+
+        input.input("123")
+
+        XCTAssertEqual(input.inputValue, "12")
+        XCTAssertEqual(value.value, "12")
+        XCTAssertTrue(changes.isEmpty)
+    }
+
+    func testDefaultsMatchUpstreamProps() {
+        let input = UPMessageInput()
+
+        XCTAssertEqual(input.maxlength, 4)
+        XCTAssertEqual(input.mode, "box")
+        XCTAssertFalse(input.dotFill)
+        XCTAssertTrue(input.breathe)
+        XCTAssertFalse(input.autoFocus)
+        XCTAssertFalse(input.bold)
+        XCTAssertEqual(input.fontSize, 60)
+        XCTAssertEqual(input.width, 80)
+        XCTAssertEqual(input.activeColor, "#2979ff")
+        XCTAssertEqual(input.inactiveColor, "#606266")
+        XCTAssertFalse(input.disabledKeyboard)
+    }
+
+    func testAcceptsRejectsOnlyOverLengthValues() {
+        XCTAssertTrue(UPMessageInput.accepts("", maxlength: 4))
+        XCTAssertTrue(UPMessageInput.accepts("1234", maxlength: 4))
+        XCTAssertFalse(UPMessageInput.accepts("12345", maxlength: 4))
+    }
+
+    func testResolvedModeFallsBackToBox() {
+        XCTAssertEqual(UPMessageInput.resolvedMode("box"), "box")
+        XCTAssertEqual(UPMessageInput.resolvedMode("middleLine"), "middleLine")
+        XCTAssertEqual(UPMessageInput.resolvedMode("bottomLine"), "bottomLine")
+        XCTAssertEqual(UPMessageInput.resolvedMode("unexpected"), "box")
+    }
+
+    /// Upstream only swaps in `activeColor` for the box border, and only on the
+    /// cell at the current fill position.
+    func testBorderColorUsesActiveColorOnlyForActiveBoxCell() {
+        XCTAssertEqual(
+            UPMessageInput.borderColorName(atIndex: 2, filledCount: 2, mode: "box", activeColor: "#2979ff", inactiveColor: "#606266"),
+            "#2979ff"
+        )
+        XCTAssertEqual(
+            UPMessageInput.borderColorName(atIndex: 1, filledCount: 2, mode: "box", activeColor: "#2979ff", inactiveColor: "#606266"),
+            "#606266"
+        )
+        XCTAssertEqual(
+            UPMessageInput.borderColorName(atIndex: 2, filledCount: 2, mode: "bottomLine", activeColor: "#2979ff", inactiveColor: "#606266"),
+            "#606266"
+        )
+    }
+
+    func testIsBreathingOnlyAtActiveIndexWhenEnabled() {
+        XCTAssertTrue(UPMessageInput.isBreathing(atIndex: 2, filledCount: 2, breathe: true))
+        XCTAssertFalse(UPMessageInput.isBreathing(atIndex: 3, filledCount: 2, breathe: true))
+        XCTAssertFalse(UPMessageInput.isBreathing(atIndex: 2, filledCount: 2, breathe: false))
     }
 }

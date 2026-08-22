@@ -16,9 +16,43 @@ final class TextareaTests: XCTestCase {
         XCTAssertEqual(UPTextarea.truncated("12345", maxlength: 0), "")
     }
 
+    /// Upstream's default is `autoHeight: false` with a fixed `height` and
+    /// internal scrolling, so a non-auto-height textarea must still wrap.
     func testResolvedLineLimitMapsAutoHeightSafely() {
-        XCTAssertEqual(UPTextarea.resolvedLineLimit(autoHeight: false), 1...1)
+        XCTAssertEqual(UPTextarea.resolvedLineLimit(autoHeight: false), 1...Int.max)
         XCTAssertEqual(UPTextarea.resolvedLineLimit(autoHeight: true), 3...8)
+    }
+
+    func testValueCarryingFocusAndBlurFireAlongsideTheLegacyHooks() {
+        var events: [String] = []
+        let textarea = UPTextarea(
+            onFocusValue: { events.append("focusValue:\($0)") },
+            onBlurValue: { events.append("blurValue:\($0)") }
+        )
+        .onFocus { events.append("focus") }
+        .onBlur { events.append("blur") }
+
+        textarea.onFocusHandler?()
+        textarea.onFocusValueEvent?("typed")
+        textarea.onBlurHandler?()
+        textarea.onBlurValueEvent?("typed")
+
+        XCTAssertEqual(events, ["focus", "focusValue:typed", "blur", "blurValue:typed"])
+    }
+
+    func testLineCountCountsNewlineSeparatedRows() {
+        XCTAssertEqual(UPTextarea.lineCount(in: ""), 0)
+        XCTAssertEqual(UPTextarea.lineCount(in: "single"), 1)
+        XCTAssertEqual(UPTextarea.lineCount(in: "alpha\nbeta"), 2)
+        XCTAssertEqual(UPTextarea.lineCount(in: "alpha\nbeta\n"), 2)
+    }
+
+    /// Upstream types `height` as `String | Number`.
+    func testHeightAcceptsUpstreamStringAndNumberForms() {
+        XCTAssertEqual(UPTextarea(height: 120).height, 120)
+        XCTAssertEqual(UPTextarea(height: "120").height, 120)
+        XCTAssertEqual(UPTextarea(height: "120px").height, 120)
+        XCTAssertEqual(UPTextarea(height: "invalid").height, UPConfig.textarea.height)
     }
 
     func testChangeFocusAndBlurModifiersStoreHandlers() {

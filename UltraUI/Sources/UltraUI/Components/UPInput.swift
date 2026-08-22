@@ -1,5 +1,8 @@
 import SwiftUI
 
+/// Mirrors the upstream `String | Number` props on `u-input`.
+public typealias UPInputUnitValue = UPCheckboxUnitValue
+
 /// A native SwiftUI counterpart of uview-plus `u-input`.
 ///
 /// `modelValue` is the direct SwiftUI equivalent of Vue's `v-model`. The
@@ -63,11 +66,22 @@ public struct UPInput: View {
     var onChangeEvent: ((String) -> Void)?
     var onFocusEvent: (() -> Void)?
     var onBlurEvent: (() -> Void)?
+    /// Upstream emits the current value on `blur`; these carry it. The
+    /// no-payload variants above remain available for source compatibility.
+    var onFocusValueEvent: ((String) -> Void)?
+    var onBlurValueEvent: ((String) -> Void)?
 
     // Earlier native modifier hooks.
     var onChangeHandler: ((String) -> Void)?
     var onFocusHandler: (() -> Void)?
     var onBlurHandler: (() -> Void)?
+
+    // Upstream `prefix` and `suffix` named slots.
+    private var prefixContent: AnyView?
+    private var suffixContent: AnyView?
+
+    var hasPrefixSlot: Bool { prefixContent != nil }
+    var hasSuffixSlot: Bool { suffixContent != nil }
 
     @Environment(\.upFormContext) private var form
     @Environment(\.upTheme) private var theme
@@ -104,11 +118,11 @@ public struct UPInput: View {
                 autoBlur: Bool = UPConfig.input.autoBlur,
                 disableDefaultPadding: Bool = UPConfig.input.disableDefaultPadding,
                 cursor: Int = UPConfig.input.cursor,
-                cursorSpacing: Double = UPConfig.input.cursorSpacing,
+                cursorSpacing: some UPInputUnitValue = UPConfig.input.cursorSpacing,
                 selectionStart: Int = UPConfig.input.selectionStart,
                 selectionEnd: Int = UPConfig.input.selectionEnd,
                 adjustPosition: Bool = UPConfig.input.adjustPosition,
-                fontSize: String = UPConfig.input.fontSize,
+                fontSize: some UPInputUnitValue = UPConfig.input.fontSize,
                 color: String = UPConfig.input.color,
                 prefixIconStyle: UPStyle = UPConfig.input.prefixIconStyle,
                 suffixIconStyle: UPStyle = UPConfig.input.suffixIconStyle,
@@ -124,7 +138,9 @@ public struct UPInput: View {
                 onNicknameReview: (() -> Void)? = nil,
                 onChange: ((String) -> Void)? = nil,
                 onFocus: (() -> Void)? = nil,
-                onBlur: (() -> Void)? = nil) {
+                onBlur: (() -> Void)? = nil,
+                onFocusValue: ((String) -> Void)? = nil,
+                onBlurValue: ((String) -> Void)? = nil) {
         self.prop = prop
         self.text = text
         self.modelValue = modelValue
@@ -149,12 +165,15 @@ public struct UPInput: View {
         self.autoBlur = autoBlur
         self.disableDefaultPadding = disableDefaultPadding
         self.cursor = cursor
-        self.cursorSpacing = cursorSpacing
+        self.cursorSpacing = UPTextarea.dimension(
+            cursorSpacing.upCheckboxUnitValue,
+            fallback: UPConfig.input.cursorSpacing
+        )
         self.selectionStart = selectionStart
         self.selectionEnd = selectionEnd
         self.adjustPosition = adjustPosition
         self.inputAlign = inputAlign
-        self.fontSize = fontSize
+        self.fontSize = fontSize.upCheckboxUnitValue
         self.color = color
         self.prefixIcon = prefixIcon
         self.prefixIconStyle = prefixIconStyle
@@ -175,12 +194,18 @@ public struct UPInput: View {
         self.onChangeEvent = onChange
         self.onFocusEvent = onFocus
         self.onBlurEvent = onBlur
+        self.onFocusValueEvent = onFocusValue
+        self.onBlurValueEvent = onBlurValue
         _localText = State(initialValue: value)
     }
 
     public var body: some View {
         VStack(alignment: .trailing, spacing: 4) {
             HStack(spacing: 8) {
+                if let prefixContent {
+                    prefixContent
+                }
+
                 if !prefixIcon.isEmpty {
                     UPIcon(name: prefixIcon, color: "#909399", size: "16px")
                         .upStyle(prefixIconStyle)
@@ -200,6 +225,10 @@ public struct UPInput: View {
                 if !suffixIcon.isEmpty {
                     UPIcon(name: suffixIcon, color: "#909399", size: "16px")
                         .upStyle(suffixIconStyle)
+                }
+
+                if let suffixContent {
+                    suffixContent
                 }
             }
             .padding(.horizontal, disableDefaultPadding ? 0 : 12)
@@ -243,12 +272,14 @@ public struct UPInput: View {
             if focused {
                 onFocusHandler?()
                 onFocusEvent?()
+                onFocusValueEvent?(currentValue)
             } else {
                 if !prop.isEmpty, let form {
                     _ = form.validate(prop: prop, trigger: "blur")
                 }
                 onBlurHandler?()
                 onBlurEvent?()
+                onBlurValueEvent?(currentValue)
             }
         }
     }
@@ -501,6 +532,20 @@ public struct UPInput: View {
 }
 
 public extension UPInput {
+    /// Upstream `prefix` named slot, rendered ahead of `prefixIcon`.
+    func prefix<Slot: View>(@ViewBuilder _ content: () -> Slot) -> UPInput {
+        var copy = self
+        copy.prefixContent = AnyView(content())
+        return copy
+    }
+
+    /// Upstream `suffix` named slot, rendered after `suffixIcon`.
+    func suffix<Slot: View>(@ViewBuilder _ content: () -> Slot) -> UPInput {
+        var copy = self
+        copy.suffixContent = AnyView(content())
+        return copy
+    }
+
     func onChange(_ action: @escaping (String) -> Void) -> UPInput {
         var copy = self
         copy.onChangeHandler = action

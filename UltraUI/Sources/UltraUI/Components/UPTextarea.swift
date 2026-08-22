@@ -1,5 +1,8 @@
 import SwiftUI
 
+/// Mirrors the upstream `String | Number` props on `u-textarea`.
+public typealias UPTextareaUnitValue = UPCheckboxUnitValue
+
 /// A native SwiftUI counterpart of uview-plus `u-textarea`.
 @MainActor
 public struct UPTextarea: View {
@@ -41,6 +44,11 @@ public struct UPTextarea: View {
     var onChangeEvent: ((String) -> Void)?
     var onFocusEvent: (() -> Void)?
     var onBlurEvent: (() -> Void)?
+    /// Upstream emits the event object on `focus` and `blur`; these carry the
+    /// current value. The no-payload variants above remain available for
+    /// source compatibility.
+    var onFocusValueEvent: ((String) -> Void)?
+    var onBlurValueEvent: ((String) -> Void)?
 
     // Earlier native modifier hooks.
     var onChangeHandler: ((String) -> Void)?
@@ -59,7 +67,7 @@ public struct UPTextarea: View {
                 count: Bool = UPConfig.textarea.count,
                 disabled: Bool = UPConfig.textarea.disabled,
                 readonly: Bool = UPConfig.textarea.readonly,
-                height: Double = UPConfig.textarea.height,
+                height: some UPTextareaUnitValue = UPConfig.textarea.height,
                 autoHeight: Bool = UPConfig.textarea.autoHeight,
                 modelValue: Binding<String>? = nil,
                 value: String = UPConfig.textarea.value,
@@ -68,7 +76,7 @@ public struct UPTextarea: View {
                 confirmType: String = UPConfig.textarea.confirmType,
                 focus: Bool = UPConfig.textarea.focus,
                 fixed: Bool = UPConfig.textarea.fixed,
-                cursorSpacing: Double = UPConfig.textarea.cursorSpacing,
+                cursorSpacing: some UPTextareaUnitValue = UPConfig.textarea.cursorSpacing,
                 cursor: Int = UPConfig.textarea.cursor,
                 showConfirmBar: Bool = UPConfig.textarea.showConfirmBar,
                 selectionStart: Int = UPConfig.textarea.selectionStart,
@@ -84,7 +92,9 @@ public struct UPTextarea: View {
                 onKeyboardHeightChange: ((Double) -> Void)? = nil,
                 onChange: ((String) -> Void)? = nil,
                 onFocus: (() -> Void)? = nil,
-                onBlur: (() -> Void)? = nil) {
+                onBlur: (() -> Void)? = nil,
+                onFocusValue: ((String) -> Void)? = nil,
+                onBlurValue: ((String) -> Void)? = nil) {
         self.prop = prop
         self.text = text
         self.readonly = readonly
@@ -93,14 +103,17 @@ public struct UPTextarea: View {
         self.placeholder = placeholder
         self.placeholderClass = placeholderClass
         self.placeholderStyle = placeholderStyle
-        self.height = height
+        self.height = Self.dimension(height.upCheckboxUnitValue, fallback: UPConfig.textarea.height)
         self.confirmType = confirmType
         self.disabled = disabled
         self.count = count
         self.focus = focus
         self.autoHeight = autoHeight
         self.fixed = fixed
-        self.cursorSpacing = cursorSpacing
+        self.cursorSpacing = Self.dimension(
+            cursorSpacing.upCheckboxUnitValue,
+            fallback: UPConfig.textarea.cursorSpacing
+        )
         self.cursor = cursor
         self.showConfirmBar = showConfirmBar
         self.selectionStart = selectionStart
@@ -118,6 +131,8 @@ public struct UPTextarea: View {
         self.onChangeEvent = onChange
         self.onFocusEvent = onFocus
         self.onBlurEvent = onBlur
+        self.onFocusValueEvent = onFocusValue
+        self.onBlurValueEvent = onBlurValue
         _localText = State(initialValue: value)
     }
 
@@ -179,12 +194,14 @@ public struct UPTextarea: View {
             if focused {
                 onFocusHandler?()
                 onFocusEvent?()
+                onFocusValueEvent?(currentValue)
             } else {
                 if !prop.isEmpty, let form {
                     _ = form.validate(prop: prop, trigger: "blur")
                 }
                 onBlurHandler?()
                 onBlurEvent?()
+                onBlurValueEvent?(currentValue)
             }
         }
     }
@@ -194,8 +211,11 @@ public struct UPTextarea: View {
         UPInput.truncated(value, maxlength: maxlength)
     }
 
+    /// Upstream renders a fixed-height, internally scrolling textarea when
+    /// `autoHeight` is off, so the row count must stay unbounded; the visible
+    /// height comes from the `height` prop instead.
     static func resolvedLineLimit(autoHeight: Bool) -> ClosedRange<Int> {
-        autoHeight ? 3...8 : 1...1
+        autoHeight ? 3...8 : 1...Int.max
     }
 
     static func value(prop: String,
@@ -338,9 +358,17 @@ public struct UPTextarea: View {
         onConfirm?(currentValue)
     }
 
-    private static func lineCount(in value: String) -> Int {
+    /// Number of newline-separated rows, used for the `linechange` payload.
+    static func lineCount(in value: String) -> Int {
         guard !value.isEmpty else { return 0 }
         return value.split(whereSeparator: \.isNewline).count
+    }
+
+    /// Normalizes an upstream `String | Number` dimension, falling back when the
+    /// string carries no parsable length.
+    static func dimension(_ value: String, fallback: Double) -> Double {
+        let parsed = Double(UPUnit.parse(value))
+        return parsed > 0 ? parsed : fallback
     }
 }
 

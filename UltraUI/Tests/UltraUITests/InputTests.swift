@@ -147,6 +147,46 @@ final class InputTests: XCTestCase {
         XCTAssertEqual(UPInput.resolvedType("unexpected"), "text")
         XCTAssertEqual(UPInput.resolvedTextAlignment("right"), .trailing)
     }
+
+    /// Upstream exposes `prefix` and `suffix` named slots alongside the
+    /// `prefixIcon` and `suffixIcon` string props.
+    func testPrefixAndSuffixSlotsRecordTheirContent() {
+        let plain = UPInput()
+        XCTAssertFalse(plain.hasPrefixSlot)
+        XCTAssertFalse(plain.hasSuffixSlot)
+
+        let slotted = UPInput()
+            .prefix { Text("+86") }
+            .suffix { Text("@example.com") }
+
+        XCTAssertTrue(slotted.hasPrefixSlot)
+        XCTAssertTrue(slotted.hasSuffixSlot)
+    }
+
+    func testValueCarryingFocusAndBlurFireAlongsideTheLegacyHooks() {
+        var events: [String] = []
+        let input = UPInput(
+            onFocusValue: { events.append("focusValue:\($0)") },
+            onBlurValue: { events.append("blurValue:\($0)") }
+        )
+        .onFocus { events.append("focus") }
+        .onBlur { events.append("blur") }
+
+        input.onFocusHandler?()
+        input.onFocusValueEvent?("typed")
+        input.onBlurHandler?()
+        input.onBlurValueEvent?("typed")
+
+        XCTAssertEqual(events, ["focus", "focusValue:typed", "blur", "blurValue:typed"])
+    }
+
+    /// Upstream types `fontSize` and `cursorSpacing` as `String | Number`.
+    func testFontSizeAndCursorSpacingAcceptStringAndNumberForms() {
+        XCTAssertEqual(UPInput(fontSize: 18).fontSize, "18")
+        XCTAssertEqual(UPInput(fontSize: "18px").fontSize, "18px")
+        XCTAssertEqual(UPInput(cursorSpacing: 40).cursorSpacing, 40)
+        XCTAssertEqual(UPInput(cursorSpacing: "40").cursorSpacing, 40)
+    }
 }
 
 @MainActor

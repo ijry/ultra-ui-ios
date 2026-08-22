@@ -756,4 +756,24 @@ public enum UPConfig {
         public static let customStyle = UPStyle()
     }
 
+    /// Defaults for the SwiftUI counterpart of uview-plus `u-message-input`.
+    public enum messageInput {
+        public static let maxlength = 4
+        public static let dotFill = false
+        public static let mode = "box"
+        public static let value = ""
+        public static let breathe = true
+        public static let focus = false
+        public static let bold = false
+        /// Upstream declares `fontSize` and `width` in rpx.
+        public static let fontSize: Double = 60
+        public static let width: Double = 80
+        public static let activeColor = "#2979ff"
+        public static let inactiveColor = "#606266"
+        public static let disabledKeyboard = false
+        /// Existing native-only shorthands retained for source compatibility.
+        public static let disabled = false
+        public static let error = false
+    }
+
 }
