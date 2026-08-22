@@ -776,6 +776,23 @@ public enum UPConfig {
         public static let error = false
     }
 
+    /// Defaults for the SwiftUI counterparts of the legacy uview-plus table
+    /// primitives `u-table` / `u-tr` / `u-th` / `u-td`.
+    public enum table {
+        public static let borderColor = "#e4e7ed"
+        public static let align = "center"
+        public static let padding = "5px 3px"
+        public static let fontSize = "14px"
+        public static let color = "#606266"
+        public static let bgColor = "#ffffff"
+        public static let thStyle = UPStyle()
+        /// Upstream `u-th` defaults to an empty width, `u-td` to `auto`; both
+        /// mean the column stretches.
+        public static let thWidth = ""
+        public static let tdWidth = "auto"
+        public static let headerBgColor = "#f5f6f8"
+    }
+
     /// Defaults for the SwiftUI counterpart of uview-plus `u-notice-bar`.
     public enum noticeBar {
         public static let direction = "row"
