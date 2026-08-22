@@ -29,7 +29,5 @@ struct ToastDemoView: View {
             }
             .padding(20)
         }
-        .navigationTitle("Toast")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }

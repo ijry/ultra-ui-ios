@@ -24,7 +24,5 @@ struct IconDemoView: View {
             }
             .padding(20)
         }
-        .navigationTitle("Icon")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }

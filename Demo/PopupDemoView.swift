@@ -43,7 +43,5 @@ struct PopupDemoView: View {
                 .frame(maxWidth: mode == "center" ? 280 : nil)
             }
         }
-        .navigationTitle("Popup")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }

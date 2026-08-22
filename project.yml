@@ -10,12 +10,19 @@ targets:
   UltraUIDemo:
     type: application
     platform: iOS
-    sources: [Demo]
+    sources:
+      - Demo
+      - path: Demo/Resources/DemoIcons
+        type: folder
+        buildPhase: resources
     dependencies:
       - package: UltraUI
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
+        # 没有启动屏声明时，iOS 会按旧设备尺寸做兼容缩放，
+        # 在 iPhone 17 这类机型上表现为上下黑边、内容被压在中间。
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
         PRODUCT_BUNDLE_IDENTIFIER: com.xyito.ultrauidemo
         SWIFT_VERSION: "6.0"
   UltraUITests:

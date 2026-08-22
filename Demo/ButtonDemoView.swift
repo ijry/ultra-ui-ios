@@ -37,8 +37,6 @@ struct ButtonDemoView: View {
             }
             .padding(20)
         }
-        .navigationTitle("Button")
-        .navigationBarTitleDisplayMode(.inline)
     }
 
     private func sectionTitle(_ title: String) -> some View {

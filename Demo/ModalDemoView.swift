@@ -41,7 +41,5 @@ struct ModalDemoView: View {
                         }
                     })
         }
-        .navigationTitle("Modal")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }

@@ -80,8 +80,6 @@ struct FormDemoView: View {
             }
             .padding(20)
         }
-        .navigationTitle("Form")
-        .navigationBarTitleDisplayMode(.inline)
     }
 
     private func submit() {
