@@ -2,7 +2,7 @@
 
 > 最后更新：2026-08-22
 > 上游基线：uview-plus `3.8.86`，以 `components/u-*` 目录为完整清单
-> iOS 基线：`main` / `fad47ec`
+> iOS 基线：`main` / `7cec530`
 
 ## 总览
 
@@ -28,6 +28,8 @@
 接口映射原则：uview-plus named slot 对应 SwiftUI `@ViewBuilder`；Vue emit 对应闭包或链式事件修饰符；无法在 iOS 原生平台成立的小程序、DOM、CSS 或路由能力会保留兼容元数据，或在备注中明确采用原生替代方案。
 
 输入组件族的原生适配语义：`placeholderClass` 无 CSS class 对应物；`fixed`、`adjustPosition`、`holdKeyboard`、`showConfirmBar`、`disableDefaultPadding` 属小程序键盘与页面上推语义；`cursor`、`cursorSpacing`、`selectionStart`、`selectionEnd` 因 SwiftUI 不公开光标位置 API 而仅作元数据保留；`ignoreCompositionEvent` 的输入法合成事件由系统托管；上游 blur 前 150ms 去抖（用于保证清除按钮可点）在 `@FocusState` 下时序不同，改由 `onlyClearableOnFocused` 与 disabled 抑制共同覆盖。
+
+表单组件族的原生适配语义：上游 `validate` 返回 Promise 并 reject 错误数组，Swift 侧改为同步 `Bool` 返回值加 `errors` 字典，`$nextTick` 时序由 SwiftUI 的状态更新取代；`errorType: 'toast'` 上游直接调用全局 `toast()`，Swift 侧由 `UPFormContext.toastMessage` 暴露首条错误、交宿主 `UPToastCenter` 呈现，与本包其余组件一致地保持呈现权在宿主。
 
 ## 组件清单
 
@@ -78,8 +80,8 @@
 | 43 | `u-dropdown-item` | `UPDropdownItem` | ✅ 已完成 | 基线可用 | 下拉菜单子项 |
 | 44 | `u-empty` | `UPEmpty` | ✅ 已完成 | 高 | mode 文案/icon 映射、图片 icon、默认 slot、String/Number 单位和 show 已覆盖 |
 | 45 | `u-float-button` | `UPFloatButton` | ✅ 已完成 | 基线可用 | 悬浮按钮、展开菜单和 item-click |
-| 46 | `u-form` | `UPForm` | ✅ 已完成 | 基线可用 | 已有表单模型、规则校验和上下文基线 |
-| 47 | `u-form-item` | `UPFormItem` | ✅ 已完成 | 基线可用 | 已有布局、错误状态、props 和插槽基线 |
+| 46 | `u-form` | `UPForm` | ✅ 已完成 | 中高 | 表单模型、规则校验、错误类型与上下文已覆盖；`resetFields`/`resetField` 的 originalModel 快照、`setRules`、`validate(showErrorMsg:)` 已补齐；`errorType` 的 border-bottom 已渲染，toast 由 `toastMessage` 交宿主 `UPToastCenter` 呈现（`7cec530`） |
+| 47 | `u-form-item` | `UPFormItem` | ✅ 已完成 | 中高 | 布局、错误状态、props 与插槽已覆盖；label/error 命名插槽、border-bottom 错误下划线已补齐（`7cec530`） |
 | 48 | `u-gap` | `UPGap` | ✅ 已完成 | 中高 | 基础尺寸和背景已覆盖；后续可统一 shared mixin 接口 |
 | 49 | `u-goods-sku` | `UPGoodsSku` | ✅ 已完成 | 中高 | 规格组合、库存禁用、数量 Binding、确认载荷及旧字典回调已覆盖 |
 | 50 | `u-grid` | `UPGrid` | ✅ 已完成 | 高 | col、border、align、gap、click 上下文已覆盖 |
