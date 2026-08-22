@@ -2,7 +2,7 @@
 
 > 最后更新：2026-08-22
 > 上游基线：uview-plus `3.8.86`，以 `components/u-*` 目录为完整清单
-> iOS 基线：`main` / `9db5229`
+> iOS 基线：`main` / `63ccc1f`
 
 ## 总览
 
@@ -34,6 +34,8 @@
 公告组件族的原生适配语义：`speed`（每秒滚动 px）与 `duration`（滚动周期 ms）作为兼容元数据保留，实际滚动交 SwiftUI 动画；`disableTouch` 的手势切换限小程序平台；`url` + `linkType` 的路由跳转由宿主实现，与 `UPButton` 的开放能力转发一致。
 
 旧表格组件族的原生适配语义：上游 `u-th`/`u-td` 在 `mounted` 中经 `$parent` 反查父表并把样式拷进自身，SwiftUI 无此机制，改由 `UPTable` 通过 Environment 下发 `UPTableStyleContext`；上游用 CSS `flex: 0 0 <width>` 固定列宽，Swift 侧改为 `fixedWidth`（自适应时为 `nil`）；`padding` 的 CSS 简写拆为纵横两个 inset。
+
+`u-table2` 的照抄决策：上游 `emits` 声明 11 个事件但实际只 emit 6 个名字，`select-all`/`cell-click`/`row-dblclick`/`header-click`/`filter-change` 是死声明（其中 `handleHeaderClick` 存在且已绑定，却只做排序从不 emit），故不建模，改由 `UPTable2.declaredButNeverEmittedEventNames` 记录并用测试固定。上游同样**不存在**全选、半选 indeterminate、合计行与 `selectable` 行禁用回调，未按 element-plus 直觉补齐。以下反直觉行为按约定照抄并在源码注释标注，以保证迁移可预测：`sortable: 'custom'` 仍走本地排序（上游 `!!column.sortable`）；排序第三态是删除条件而非 `order: null`；`selection-change` 早于 `select`；选择只向下级联不更新父行；`hasTree` 只看第一层故纯 `hasChildren` 懒加载树无展开箭头；`defaultExpandAll` 是 merge 永不移除；空数据判定用原始 `data` 故过滤为空时不显示 `emptyText`；`maxHeight` 直拼 `px` 使 `"50vh"` 变 `"50vhpx"`；固定列仅认严格 `"left"` 且浮层需先横向滚动才显形。渲染层（固定列重复渲染浮层、`spanMethod` 合并单元格）保持简化基线；上游 `tableRow.vue` 的 `getCellSpan` 对象分支存在 ReferenceError，未移植。
 
 ## 组件清单
 
@@ -158,7 +160,7 @@
 | 117 | `u-tabbar` | `UPTabbar` | ✅ 已完成 | 中高 | 支持 Binding/无控 String value、结构化 change payload、图标/样式/安全区；与 tabbar-item 配套 |
 | 118 | `u-tabbar-item` | `UPTabbarItem` | ✅ 已完成 | 中高 | tabbar 子项、badge、active/inactive icon、事件 payload |
 | 119 | `u-table` | `UPTable` | ✅ 已完成 | 中高 | 7 个上游 props 与默认值已覆盖；改由 `UPTableStyleContext` 经 Environment 下发父表样式，替代上游 `$parent` 查找（`9db5229`） |
-| 120 | `u-table2` | `UPTable2` | ✅ 已完成 | 基线可用 | 新版表格，含内部 tableRow |
+| 120 | `u-table2` | `UPTable2` | ✅ 已完成 | 中高 | 24 个 props、6 个真实事件载荷、排序三态轮转/multiSort/sortBy/sortMethod、filters 子串匹配、选择向下级联、树形展开与懒加载、左固定列与空数据已覆盖；上游 5 个死声明事件不建模、`declaredButNeverEmittedEventNames` 记录；渲染层为简化基线（`63ccc1f`） |
 | 121 | `u-tabs` | `UPTabs` | ✅ 已完成 | 中高 | 支持 String 列表/Int Binding、无控选中状态、disabled/click/change、滚动指示器；与 tabs-item 配套 |
 | 122 | `u-tabs-item` | `UPTabsItem` | ✅ 已完成 | 中高 | name/badge/icon/disabled 元数据与父子选择上下文已覆盖 |
 | 123 | `u-tag` | `UPTag` | ✅ 已完成 | 高 | props、click/close payload、图标及内容插槽已覆盖 |
