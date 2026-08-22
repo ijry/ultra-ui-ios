@@ -2,7 +2,7 @@
 
 > 最后更新：2026-08-22
 > 上游基线：uview-plus `3.8.86`，以 `components/u-*` 目录为完整清单
-> iOS 基线：`main` / `58e44d0`
+> iOS 基线：`main` / `9db5229`
 
 ## 总览
 
@@ -32,6 +32,8 @@
 表单组件族的原生适配语义：上游 `validate` 返回 Promise 并 reject 错误数组，Swift 侧改为同步 `Bool` 返回值加 `errors` 字典，`$nextTick` 时序由 SwiftUI 的状态更新取代；`errorType: 'toast'` 上游直接调用全局 `toast()`，Swift 侧由 `UPFormContext.toastMessage` 暴露首条错误、交宿主 `UPToastCenter` 呈现，与本包其余组件一致地保持呈现权在宿主。
 
 公告组件族的原生适配语义：`speed`（每秒滚动 px）与 `duration`（滚动周期 ms）作为兼容元数据保留，实际滚动交 SwiftUI 动画；`disableTouch` 的手势切换限小程序平台；`url` + `linkType` 的路由跳转由宿主实现，与 `UPButton` 的开放能力转发一致。
+
+旧表格组件族的原生适配语义：上游 `u-th`/`u-td` 在 `mounted` 中经 `$parent` 反查父表并把样式拷进自身，SwiftUI 无此机制，改由 `UPTable` 通过 Environment 下发 `UPTableStyleContext`；上游用 CSS `flex: 0 0 <width>` 固定列宽，Swift 侧改为 `fixedWidth`（自适应时为 `nil`）；`padding` 的 CSS 简写拆为纵横两个 inset。
 
 ## 组件清单
 
@@ -155,20 +157,20 @@
 | 116 | `u-switch` | `UPSwitch` | ✅ 已完成 | 高 | active/inactive value、loading/disabled、change 已覆盖 |
 | 117 | `u-tabbar` | `UPTabbar` | ✅ 已完成 | 中高 | 支持 Binding/无控 String value、结构化 change payload、图标/样式/安全区；与 tabbar-item 配套 |
 | 118 | `u-tabbar-item` | `UPTabbarItem` | ✅ 已完成 | 中高 | tabbar 子项、badge、active/inactive icon、事件 payload |
-| 119 | `u-table` | `UPTable` | ✅ 已完成 | 基线可用 | 旧版表格组件族，与 tr/th/td 配套 |
+| 119 | `u-table` | `UPTable` | ✅ 已完成 | 中高 | 7 个上游 props 与默认值已覆盖；改由 `UPTableStyleContext` 经 Environment 下发父表样式，替代上游 `$parent` 查找（`9db5229`） |
 | 120 | `u-table2` | `UPTable2` | ✅ 已完成 | 基线可用 | 新版表格，含内部 tableRow |
 | 121 | `u-tabs` | `UPTabs` | ✅ 已完成 | 中高 | 支持 String 列表/Int Binding、无控选中状态、disabled/click/change、滚动指示器；与 tabs-item 配套 |
 | 122 | `u-tabs-item` | `UPTabsItem` | ✅ 已完成 | 中高 | name/badge/icon/disabled 元数据与父子选择上下文已覆盖 |
 | 123 | `u-tag` | `UPTag` | ✅ 已完成 | 高 | props、click/close payload、图标及内容插槽已覆盖 |
-| 124 | `u-td` | `UPTd` | ✅ 已完成 | 基线可用 | 旧版表格单元格 |
+| 124 | `u-td` | `UPTd` | ✅ 已完成 | 中高 | 先继承父表 align/padding/fontSize/color/borderColor，再由非空自身 props 覆盖；`width != "auto"` 才固定列宽；padding 无单元格级 prop 故始终继承（`9db5229`） |
 | 125 | `u-text` | `UPText` | ✅ 已完成 | 高 | mode/formatter、String/Number 属性、图标、行数/样式、link/phone 元数据和 click 已覆盖 |
 | 126 | `u-textarea` | `UPTextarea` | ✅ 已完成 | 中高 | 原生 TextEditor、props、count、formatter 已覆盖；String/Number height 与 cursorSpacing、带值 focus/blur 事件已补齐；已修正非自增高时被限制为单行的行数上限，改为固定高度 + 内部滚动（`fad47ec`） |
-| 127 | `u-th` | `UPTh` | ✅ 已完成 | 基线可用 | 旧版表格表头单元格 |
+| 127 | `u-th` | `UPTh` | ✅ 已完成 | 中高 | 继承父表 align/padding/borderColor 与 thStyle 合并顺序已覆盖；`width` 非空才固定列宽（与 td 的 "auto" 判定不同）（`9db5229`） |
 | 128 | `u-title` | `UPTitle` | ✅ 已完成 | 高 | 标题模式、颜色、尺寸和样式已覆盖 |
 | 129 | `u-toast` | `UPToast` / `UPToastView` | ✅ 已完成 | 基线可用 | 声明式/命令式基线、options 与行为已提交 |
 | 130 | `u-toolbar` | `UPToolbar` | ✅ 已完成 | 基线可用 | Picker 等组件共用的工具栏 |
 | 131 | `u-tooltip` | `UPTooltip` | ✅ 已完成 | 基线可用 | 浮层定位、复制和关闭行为 |
-| 132 | `u-tr` | `UPTr` | ✅ 已完成 | 基线可用 | 旧版表格行 |
+| 132 | `u-tr` | `UPTr` | ✅ 已完成 | 高 | 上游无 props 无逻辑，仅为 flex 行容器，已完全对应 |
 | 133 | `u-transition` | `UPTransition` | ✅ 已完成 | 高 | mode、duration、timing、生命周期事件、click 和插槽已覆盖 |
 | 134 | `u-tree` | `UPTree` | ✅ 已完成 | 中高 | 递归节点、禁用、多选/勾选 Binding、展开及 select/check 事件已覆盖 |
 | 135 | `u-upload` | `UPUpload` | ✅ 已完成 | 基线可用 | PhotosPicker、上传状态、预览及事件，复杂原生能力 |
