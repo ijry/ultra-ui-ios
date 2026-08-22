@@ -2,7 +2,7 @@
 
 > 最后更新：2026-08-22
 > 上游基线：uview-plus `3.8.86`，以 `components/u-*` 目录为完整清单
-> iOS 基线：`main` / `7cec530`
+> iOS 基线：`main` / `58e44d0`
 
 ## 总览
 
@@ -30,6 +30,8 @@
 输入组件族的原生适配语义：`placeholderClass` 无 CSS class 对应物；`fixed`、`adjustPosition`、`holdKeyboard`、`showConfirmBar`、`disableDefaultPadding` 属小程序键盘与页面上推语义；`cursor`、`cursorSpacing`、`selectionStart`、`selectionEnd` 因 SwiftUI 不公开光标位置 API 而仅作元数据保留；`ignoreCompositionEvent` 的输入法合成事件由系统托管；上游 blur 前 150ms 去抖（用于保证清除按钮可点）在 `@FocusState` 下时序不同，改由 `onlyClearableOnFocused` 与 disabled 抑制共同覆盖。
 
 表单组件族的原生适配语义：上游 `validate` 返回 Promise 并 reject 错误数组，Swift 侧改为同步 `Bool` 返回值加 `errors` 字典，`$nextTick` 时序由 SwiftUI 的状态更新取代；`errorType: 'toast'` 上游直接调用全局 `toast()`，Swift 侧由 `UPFormContext.toastMessage` 暴露首条错误、交宿主 `UPToastCenter` 呈现，与本包其余组件一致地保持呈现权在宿主。
+
+公告组件族的原生适配语义：`speed`（每秒滚动 px）与 `duration`（滚动周期 ms）作为兼容元数据保留，实际滚动交 SwiftUI 动画；`disableTouch` 的手势切换限小程序平台；`url` + `linkType` 的路由跳转由宿主实现，与 `UPButton` 的开放能力转发一致。
 
 ## 组件清单
 
@@ -67,7 +69,7 @@
 | 30 | `u-collapse` | `UPCollapse` | ✅ 已完成 | 高 | scalar/array value、accordion、change/open/close 已覆盖 |
 | 31 | `u-collapse-item` | `UPCollapseItem` | ✅ 已完成 | 高 | disabled、name、标题/图标/内容等 named slots 已覆盖 |
 | 32 | `u-color-picker` | `UPColorPicker` | ✅ 已完成 | 基线可用 | 可封装 SwiftUI `ColorPicker`，需保持上游颜色模型 |
-| 33 | `u-column-notice` | `UPColumnNotice` | ✅ 已完成 | 基线可用 | 上游 notice 内部辅助组件 |
+| 33 | `u-column-notice` | `UPColumnNotice` | ✅ 已完成 | 中高 | 上游 props（icon/mode/color/bgColor/fontSize/speed/step/duration/disableTouch/justifyContent）与 click/close 已覆盖；duration 默认 1500 与 notice-bar 的 2000 区分；旧 `notices:`/`interval:` 初始化器保留（`58e44d0`） |
 | 34 | `u-copy` | `UPCopy` | ✅ 已完成 | 高 | 原生剪贴板、props、默认/自定义 slot、success 及空内容/失败行为已覆盖 |
 | 35 | `u-count-down` | `UPCountDown` | ✅ 已完成 | 高 | 时间输入、格式化、change/finish payload 与控制接口已覆盖 |
 | 36 | `u-count-to` | `UPCountTo` | ✅ 已完成 | 高 | 数字动画、格式化和事件已覆盖 |
@@ -109,7 +111,7 @@
 | 72 | `u-navbar` | `UPNavbar` | ✅ 已完成 | 基线可用 | 需映射 NavigationStack/toolbar，同时保留上游布局 props |
 | 73 | `u-navbar-mini` | `UPNavbarMini` | ✅ 已完成 | 基线可用 | 小程序胶囊导航语义需原生适配 |
 | 74 | `u-no-network` | `UPNoNetwork` | ✅ 已完成 | 基线可用 | 已提供可注入网络状态模型和 Network.framework 适配 |
-| 75 | `u-notice-bar` | `UPNoticeBar` | ✅ 已完成 | 基线可用 | 横向/纵向公告滚动 |
+| 75 | `u-notice-bar` | `UPNoticeBar` | ✅ 已完成 | 中高 | 13 个上游 props、`text` 的 Array/String 双类型、带索引 click、close 已覆盖；关闭图标改由 `mode == "closable"` 驱动（上游无 closable prop）；`resolvedVariant` 公开 direction/step 的 column/row 委派选择；无参 onClick 旧拼写保留（`58e44d0`） |
 | 76 | `u-notify` | `UPNotify` | ✅ 已完成 | 基线可用 | 顶部通知及命令式 API |
 | 77 | `u-number-box` | `UPNumberBox` | ✅ 已完成 | 高 | 数值模型、步进、范围、格式和事件已覆盖 |
 | 78 | `u-number-keyboard` | `UPNumberKeyboard` | ✅ 已完成 | 基线可用 | 数字键盘和 random/dot 模式 |
@@ -131,7 +133,7 @@
 | 94 | `u-read-more` | `UPReadMore` | ✅ 已完成 | 基线可用 | 内容测量、展开/收起事件 |
 | 95 | `u-refresh-virtual-list` | `UPRefreshVirtualList` | ✅ 已完成 | 基线可用 | 上游虚拟列表刷新辅助组件 |
 | 96 | `u-row` | `UPRow` | ✅ 已完成 | 高 | gutter、justify、align、click 和布局上下文已覆盖 |
-| 97 | `u-row-notice` | `UPRowNotice` | ✅ 已完成 | 基线可用 | 上游 notice 内部辅助组件 |
+| 97 | `u-row-notice` | `UPRowNotice` | ✅ 已完成 | 中高 | 上游 props（icon/mode/color/bgColor/fontSize/speed）与 click/change/close 已覆盖；旧 `notices:` 初始化器保留（`58e44d0`） |
 | 98 | `u-safe-bottom` | `UPSafeBottom` | ✅ 已完成 | 基线可用 | 可映射 safeAreaInset |
 | 99 | `u-scroll-list` | `UPScrollList` | ✅ 已完成 | 基线可用 | 横向滚动和指示器联动 |
 | 100 | `u-search` | `UPSearch` | ✅ 已完成 | 高 | Binding、clear/search/custom 事件、左右插槽和配置已覆盖 |
