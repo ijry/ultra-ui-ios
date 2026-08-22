@@ -2,7 +2,7 @@
 
 > 最后更新：2026-08-22
 > 上游基线：uview-plus `3.8.86`，以 `components/u-*` 目录为完整清单
-> iOS 基线：`main` / `b345e9f`
+> iOS 基线：`main` / `fad47ec`
 
 ## 总览
 
@@ -26,6 +26,8 @@
 | ⬜ | 待开始 | 尚未实现；接口兼容性未评估 |
 
 接口映射原则：uview-plus named slot 对应 SwiftUI `@ViewBuilder`；Vue emit 对应闭包或链式事件修饰符；无法在 iOS 原生平台成立的小程序、DOM、CSS 或路由能力会保留兼容元数据，或在备注中明确采用原生替代方案。
+
+输入组件族的原生适配语义：`placeholderClass` 无 CSS class 对应物；`fixed`、`adjustPosition`、`holdKeyboard`、`showConfirmBar`、`disableDefaultPadding` 属小程序键盘与页面上推语义；`cursor`、`cursorSpacing`、`selectionStart`、`selectionEnd` 因 SwiftUI 不公开光标位置 API 而仅作元数据保留；`ignoreCompositionEvent` 的输入法合成事件由系统托管；上游 blur 前 150ms 去抖（用于保证清除按钮可点）在 `@FocusState` 下时序不同，改由 `onlyClearableOnFocused` 与 disabled 抑制共同覆盖。
 
 ## 组件清单
 
@@ -88,7 +90,7 @@
 | 55 | `u-index-anchor` | `UPIndexAnchor` | ✅ 已完成 | 基线可用 | 与索引列表配套 |
 | 56 | `u-index-item` | `UPIndexItem` | ✅ 已完成 | 基线可用 | 与索引列表配套 |
 | 57 | `u-index-list` | `UPIndexList` | ✅ 已完成 | 基线可用 | 索引定位和滚动联动 |
-| 58 | `u-input` | `UPInput` | ✅ 已完成 | 基线可用 | 原生 TextField、props、事件和插槽基线已提交 |
+| 58 | `u-input` | `UPInput` | ✅ 已完成 | 中高 | 原生 TextField、props、事件和插槽已覆盖；String/Number fontSize 与 cursorSpacing、prefix/suffix 命名插槽、带值 focus/blur 事件已补齐（`fad47ec`）；清除按钮额外抑制 disabled 状态为原生适配 |
 | 59 | `u-keyboard` | `UPKeyboard` | ✅ 已完成 | 基线可用 | 自定义键盘容器 |
 | 60 | `u-lazy-load` | `UPLazyLoad` | ✅ 已完成 | 基线可用 | SwiftUI 原生按需渲染语义不同 |
 | 61 | `u-line` | `UPLine` | ✅ 已完成 | 中高 | 方向、长度、虚线与 hairline 已覆盖 |
@@ -100,7 +102,7 @@
 | 67 | `u-loading-page` | `UPLoadingPage` | ✅ 已完成 | 高 | 全屏 overlay、模式、图片、默认插槽和配置已覆盖 |
 | 68 | `u-loadmore` | `UPLoadmore` | ✅ 已完成 | 高 | status、图标、文字、尺寸和 click 已覆盖 |
 | 69 | `u-markdown` | `UPMarkdown` | ✅ 已完成 | 基线可用 | 已采用 Foundation AttributedString，无第三方依赖 |
-| 70 | `u-message-input` | `UPMessageInput` | ✅ 已完成 | 基线可用 | 上游独立消息输入组件 |
+| 70 | `u-message-input` | `UPMessageInput` | ✅ 已完成 | 中高 | 上游全部 props、box/middleLine/bottomLine 三种 mode、breathe 动画、change/finish 已覆盖；按上游 `getVal` 语义实现"超长输入不派发事件、外部赋值截断"；已改为可观测 controller 并补透明 TextField 承接键盘（`fad47ec`）；上游 `focus` prop 因与既有 `focus()` 方法同名而存储为 `autoFocus`，`focus:` 初始化标签不变 |
 | 71 | `u-modal` | `UPModal` | ✅ 已完成 | 中高 | 基于原生弹层；String/Number 偏移、宽度和动画时长、同步/异步确认顺序、异步取消、named slots 及 `confirmButtonShape` 取消按钮抑制已覆盖 |
 | 72 | `u-navbar` | `UPNavbar` | ✅ 已完成 | 基线可用 | 需映射 NavigationStack/toolbar，同时保留上游布局 props |
 | 73 | `u-navbar-mini` | `UPNavbarMini` | ✅ 已完成 | 基线可用 | 小程序胶囊导航语义需原生适配 |
@@ -156,7 +158,7 @@
 | 123 | `u-tag` | `UPTag` | ✅ 已完成 | 高 | props、click/close payload、图标及内容插槽已覆盖 |
 | 124 | `u-td` | `UPTd` | ✅ 已完成 | 基线可用 | 旧版表格单元格 |
 | 125 | `u-text` | `UPText` | ✅ 已完成 | 高 | mode/formatter、String/Number 属性、图标、行数/样式、link/phone 元数据和 click 已覆盖 |
-| 126 | `u-textarea` | `UPTextarea` | ✅ 已完成 | 基线可用 | 原生 TextEditor 基线已有；当前有未提交 props/事件增强 |
+| 126 | `u-textarea` | `UPTextarea` | ✅ 已完成 | 中高 | 原生 TextEditor、props、count、formatter 已覆盖；String/Number height 与 cursorSpacing、带值 focus/blur 事件已补齐；已修正非自增高时被限制为单行的行数上限，改为固定高度 + 内部滚动（`fad47ec`） |
 | 127 | `u-th` | `UPTh` | ✅ 已完成 | 基线可用 | 旧版表格表头单元格 |
 | 128 | `u-title` | `UPTitle` | ✅ 已完成 | 高 | 标题模式、颜色、尺寸和样式已覆盖 |
 | 129 | `u-toast` | `UPToast` / `UPToastView` | ✅ 已完成 | 基线可用 | 声明式/命令式基线、options 与行为已提交 |
