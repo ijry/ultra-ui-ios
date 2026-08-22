@@ -18,9 +18,17 @@ struct DemoComponentPage: View {
     private var content: some View {
         switch entry.slug {
         // 基础组件
-        case "button": ButtonDemoView()
+        case "color": ColorDemoView()
         case "icon": IconDemoView()
+        case "image": ImageDemoView()
+        case "button": ButtonDemoView()
+        case "text": TextDemoView()
+        case "layout": LayoutDemoView()
+        case "cell": CellDemoView()
+        case "badge": BadgeDemoView()
+        case "tag": TagDemoView()
         case "loading-icon": LoadingIconDemoView()
+        case "loading-page": LoadingPageDemoView()
         // 表单组件
         case "form": FormDemoView()
         // 反馈组件

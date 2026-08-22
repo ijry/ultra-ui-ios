@@ -139,6 +139,32 @@ final class RowColTests: XCTestCase {
         context.handleRowClick { events.append("row") }
         XCTAssertEqual(events, ["column", "row"])
     }
+    /// 单个子视图应拿到整列宽度，否则 `frame(maxWidth: .infinity)` 会退回
+    /// 内容固有宽度，撑满写法被压成文字宽度。
+    func testSingleColumnChildIsMeasuredWithTheFullColumnWidth() {
+        XCTAssertEqual(
+            UPColContentLayout.measureWidth(justify: "flex-start", subviewCount: 1, containerWidth: 90),
+            90
+        )
+    }
+
+    /// 多个子视图仍按固有宽度测量，否则每个都会索取整列宽度而无法并排。
+    func testMultipleColumnChildrenKeepTheirIntrinsicWidth() {
+        XCTAssertNil(
+            UPColContentLayout.measureWidth(justify: "flex-start", subviewCount: 2, containerWidth: 90)
+        )
+        XCTAssertNil(
+            UPColContentLayout.measureWidth(justify: "center", subviewCount: 3, containerWidth: 90)
+        )
+    }
+
+    /// 负宽度夹到 0，不向下游传播非法尺寸。
+    func testNegativeContainerWidthIsClampedToZero() {
+        XCTAssertEqual(
+            UPColContentLayout.measureWidth(justify: "flex-start", subviewCount: 1, containerWidth: -10),
+            0
+        )
+    }
 }
 
 #if os(macOS)

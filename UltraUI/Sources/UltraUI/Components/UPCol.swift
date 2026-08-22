@@ -27,7 +27,14 @@ struct UPColContentLayout: Layout {
         cache: inout ()
     ) {
         guard !subviews.isEmpty else { return }
-        let sizes = subviews.map { $0.sizeThatFits(ProposedViewSize(width: nil, height: bounds.height)) }
+        let measureWidth = Self.measureWidth(
+            justify: justify,
+            subviewCount: subviews.count,
+            containerWidth: bounds.width
+        )
+        let sizes = subviews.map {
+            $0.sizeThatFits(ProposedViewSize(width: measureWidth, height: bounds.height))
+        }
         let occupiedWidth = sizes.reduce(0) { $0 + $1.width }
         let remainingWidth = bounds.width - occupiedWidth
         let (leadingSpace, betweenSpace) = distribution(
@@ -56,6 +63,20 @@ struct UPColContentLayout: Layout {
                 cursor += betweenSpace
             }
         }
+    }
+
+    /// 测量子内容时该提议多宽。
+    ///
+    /// 单个子视图时提议整列宽度，`frame(maxWidth: .infinity)` 才能撑满该列
+    /// —— 上游 `u-col` 的内容是块级元素，默认就占满列宽。此前这里一律用
+    /// `nil` 测量，等于让内容退回固有宽度，于是撑满写法被压成文字宽度。
+    ///
+    /// 多个子视图时仍用 `nil`：需要各自的固有宽度才能按 justify 分配剩余空间，
+    /// 否则每个子视图都会索取整列宽度而无法并排。
+    static func measureWidth(justify: String,
+                             subviewCount: Int,
+                             containerWidth: CGFloat) -> CGFloat? {
+        subviewCount == 1 ? max(containerWidth, 0) : nil
     }
 
     private func distribution(remainingWidth: CGFloat, itemCount: Int) -> (CGFloat, CGFloat) {
