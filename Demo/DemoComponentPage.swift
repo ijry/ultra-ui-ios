@@ -31,6 +31,14 @@ struct DemoComponentPage: View {
         case "loading-page": LoadingPageDemoView()
         // 表单组件
         case "form": FormDemoView()
+        case "input": InputDemoView()
+        case "textarea": TextareaDemoView()
+        case "search": SearchDemoView()
+        case "numberBox": NumberBoxDemoView()
+        case "code": CodeDemoView()
+        case "rate": RateDemoView()
+        case "switch": SwitchDemoView()
+        case "slider": SliderDemoView()
         // 反馈组件
         case "popup": PopupDemoView()
         case "modal": ModalDemoView()
