@@ -187,6 +187,9 @@ public struct UPPicker: View {
 
     private var modelValue: Binding<[String]>?
     private var showBinding: Binding<Bool>?
+
+    /// 上游 `showByClickInput`：带输入框触发器时，点击输入框展开弹层。
+    @State private var showByClickInput = false
     @ObservedObject private var selection: UPPickerSelection
     private var onChangeHandler: ((UPPickerChange) -> Void)?
     private var onConfirmHandler: ((UPPickerChange) -> Void)?
@@ -349,6 +352,30 @@ public struct UPPicker: View {
     }
 
     public var body: some View {
+        // 上游把整个 picker 包在 u-popup 内，可见性由
+        // `show || (hasInput && showByClickInput)` 决定；pageInline 时不走弹层。
+        if Self.isContentVisible(
+            show: showBinding?.wrappedValue ?? show,
+            hasInput: hasInput,
+            showByClickInput: showByClickInput,
+            pageInline: pageInline
+        ) {
+            content
+        }
+    }
+
+    /// 上游 `u-popup` 的 `:show="show || (hasInput && showByClickInput)"`。
+    /// `pageInline` 是页面内嵌模式，此时内容常驻，不受 `show` 影响。
+    public static func isContentVisible(show: Bool,
+                                       hasInput: Bool,
+                                       showByClickInput: Bool,
+                                       pageInline: Bool = false) -> Bool {
+        if pageInline { return true }
+        return show || (hasInput && showByClickInput)
+    }
+
+    @ViewBuilder
+    private var content: some View {
         VStack(spacing: 0) {
             if hasInput, let triggerContent {
                 triggerContent

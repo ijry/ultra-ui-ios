@@ -360,6 +360,36 @@ final class DropdownTests: XCTestCase {
         XCTAssertEqual(value.value, "asc")
         XCTAssertEqual(changed, "asc")
     }
+
+    /// 上游整个 picker 包在 `u-popup` 里，由 `show || (hasInput && showByClickInput)`
+    /// 控制可见。此前 Swift 侧 body 完全不看 `show`，导致 `show` 为 false 时
+    /// 工具栏与滚轮仍绘制出来，叠在页面上。
+    func testPickerContentIsHiddenWhileShowIsFalse() {
+        XCTAssertFalse(UPPicker.isContentVisible(show: false, hasInput: false, showByClickInput: false))
+        XCTAssertTrue(UPPicker.isContentVisible(show: true, hasInput: false, showByClickInput: false))
+    }
+
+    /// 带输入框触发器时，点击输入框也应展开，与上游的 or 条件一致。
+    func testPickerContentAlsoOpensFromTheInputTrigger() {
+        XCTAssertTrue(UPPicker.isContentVisible(show: false, hasInput: true, showByClickInput: true))
+        // 没有输入框时 showByClickInput 不该单独生效。
+        XCTAssertFalse(UPPicker.isContentVisible(show: false, hasInput: false, showByClickInput: true))
+        // 有输入框但未点击，且 show 为 false 时仍隐藏。
+        XCTAssertFalse(UPPicker.isContentVisible(show: false, hasInput: true, showByClickInput: false))
+    }
+
+    /// `pageInline` 是页面内嵌模式，上游此时不走弹层，内容常驻。
+    func testPageInlinePickerIgnoresShow() {
+        XCTAssertTrue(UPPicker.isContentVisible(show: false, hasInput: false, showByClickInput: false, pageInline: true))
+    }
+
+    /// u-datetime-picker 同样包在 u-popup 里，可见性规则与 picker 一致。
+    func testDatetimePickerContentIsHiddenWhileShowIsFalse() {
+        XCTAssertFalse(UPDatetimePicker.isContentVisible(show: false, hasInput: false, showByClickInput: false))
+        XCTAssertTrue(UPDatetimePicker.isContentVisible(show: true, hasInput: false, showByClickInput: false))
+        XCTAssertTrue(UPDatetimePicker.isContentVisible(show: false, hasInput: true, showByClickInput: true))
+        XCTAssertTrue(UPDatetimePicker.isContentVisible(show: false, hasInput: false, showByClickInput: false, pageInline: true))
+    }
 }
 
 @MainActor final class StringArrayBox { var value: [String]; init(_ value: [String]) { self.value = value }; var binding: Binding<[String]> { Binding(get: { self.value }, set: { self.value = $0 }) } }

@@ -39,6 +39,13 @@ struct DemoComponentPage: View {
         case "rate": RateDemoView()
         case "switch": SwitchDemoView()
         case "slider": SliderDemoView()
+        case "checkbox": CheckboxDemoView()
+        case "radio": RadioDemoView()
+        case "picker": PickerDemoView()
+        case "datetimePicker": DatetimePickerDemoView()
+        case "select": SelectDemoView()
+        case "cascader": CascaderDemoView()
+        case "choose": ChooseDemoView()
         // 反馈组件
         case "popup": PopupDemoView()
         case "modal": ModalDemoView()

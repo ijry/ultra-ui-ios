@@ -79,6 +79,9 @@ public struct UPDatetimePicker: View {
     private var timestampModelValue: Binding<Int64>?
     private var timeModelValue: Binding<String>?
     private var showBinding: Binding<Bool>?
+
+    /// 与 picker 一致：带输入框触发器时点击输入框展开。
+    @State private var showByClickInput = false
     @ObservedObject private var selection: UPDatetimePickerSelection
     private var onChangeHandler: ((Int64) -> Void)?
     private var onChangeStringHandler: ((String) -> Void)?
@@ -356,6 +359,32 @@ public struct UPDatetimePicker: View {
     }
 
     public var body: some View {
+        // 与 u-picker 一致：整个组件由 u-popup 承载，可见性同一套规则。
+        if Self.isContentVisible(
+            show: showBinding?.wrappedValue ?? show,
+            hasInput: hasInput,
+            showByClickInput: showByClickInput,
+            pageInline: pageInline
+        ) {
+            content
+        }
+    }
+
+    /// 复用 picker 的可见性规则，保持两个组件行为一致。
+    public static func isContentVisible(show: Bool,
+                                       hasInput: Bool,
+                                       showByClickInput: Bool,
+                                       pageInline: Bool = false) -> Bool {
+        UPPicker.isContentVisible(
+            show: show,
+            hasInput: hasInput,
+            showByClickInput: showByClickInput,
+            pageInline: pageInline
+        )
+    }
+
+    @ViewBuilder
+    private var content: some View {
         VStack(spacing: 0) {
             if hasInput, let triggerContent {
                 triggerContent
