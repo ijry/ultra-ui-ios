@@ -11,8 +11,48 @@ final class PopupTests: XCTestCase {
     }
 
     func testHiddenOverlayDoesNotReceiveHitTesting() {
-        XCTAssertFalse(UPOverlay.allowsHitTesting(show: false))
-        XCTAssertTrue(UPOverlay.allowsHitTesting(show: true))
+        XCTAssertFalse(UPOverlay<EmptyView>.allowsHitTesting(show: false))
+        XCTAssertTrue(UPOverlay<EmptyView>.allowsHitTesting(show: true))
+    }
+
+    /// 上游 `libs/config/props/overlay.js`：`show: false`、`zIndex: 10070`、
+    /// `duration: 300`、`opacity: 0.5`。
+    func testOverlayPropDefaultsMatchUpstream() {
+        XCTAssertFalse(UPConfig.overlay.show)
+        XCTAssertEqual(UPConfig.overlay.zIndex, 10_070)
+        XCTAssertEqual(UPConfig.overlay.duration, 300)
+        XCTAssertEqual(UPConfig.overlay.opacity, 0.5)
+
+        let overlay = UPOverlay()
+        XCTAssertFalse(overlay.show)
+        XCTAssertEqual(overlay.zIndex, 10_070)
+        XCTAssertEqual(overlay.opacity, 0.5)
+        // 隐藏时整层淡出（上游由 u-transition 负责）。
+        XCTAssertEqual(overlay.resolvedOpacity, 0)
+        XCTAssertEqual(UPOverlay(show: true).resolvedOpacity, 0.5)
+        XCTAssertTrue(overlay.customStyle.properties.isEmpty)
+    }
+
+    /// `opacity` 是 `String | Number`，小数字符串要能解析且不丢精度。
+    func testOverlayOpacityAcceptsStringAndNumber() {
+        XCTAssertEqual(UPOverlay<EmptyView>.parseOpacity("0.8"), 0.8)
+        XCTAssertEqual(UPOverlay<EmptyView>.parseOpacity("1"), 1)
+        // 解析不出时回落上游默认值。
+        XCTAssertEqual(UPOverlay<EmptyView>.parseOpacity("auto"), 0.5)
+
+        XCTAssertEqual(UPOverlay(show: true, opacity: "0.8").resolvedOpacity, 0.8)
+        XCTAssertEqual(UPOverlay(show: true, opacity: 0.2).resolvedOpacity, 0.2)
+        // 超出 0...1 会被夹住。
+        XCTAssertEqual(UPOverlay(show: true, opacity: 2).resolvedOpacity, 1)
+    }
+
+    /// 上游默认插槽渲染在遮罩之上，`customStyle` 走 deepMerge 可覆盖内建样式。
+    func testOverlayAcceptsContentAndCustomStyle() {
+        let overlay = UPOverlay(show: true, customStyle: UPStyle(["backgroundColor": "#00000080"])) {
+            Text("弹窗内容")
+        }
+        XCTAssertEqual(overlay.customStyle["backgroundColor"], "#00000080")
+        XCTAssertTrue(overlay.show)
     }
 
     func testPopupOnlyRendersOverlayWhileShown() {

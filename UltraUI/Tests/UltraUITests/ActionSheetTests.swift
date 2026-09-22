@@ -206,6 +206,88 @@ extension ActionSheetTests {
         XCTAssertNotNil(closed.onCloseHandler)
     }
 
+    /// 上游 props 内联在 `.vue` 里：`modelValue: ''`、`title: ''`、`description: ''`、
+    /// `options: []`、`valueKey: 'value'`、`labelKey: 'name'`。
+    func testActionSheetDataPropDefaultsMatchUpstream() {
+        XCTAssertEqual(UPConfig.actionSheetData.modelValue, "")
+        XCTAssertEqual(UPConfig.actionSheetData.title, "")
+        XCTAssertEqual(UPConfig.actionSheetData.description, "")
+        // 上游 labelKey 默认是 name（不是 label），valueKey 默认是 value。
+        XCTAssertEqual(UPConfig.actionSheetData.valueKey, "value")
+        XCTAssertEqual(UPConfig.actionSheetData.labelKey, "name")
+
+        let sheet = UPActionSheetData()
+        XCTAssertEqual(sheet.title, "")
+        XCTAssertEqual(sheet.description, "")
+        XCTAssertTrue(sheet.options.isEmpty)
+        XCTAssertEqual(sheet.valueKey, "value")
+        XCTAssertEqual(sheet.labelKey, "name")
+        XCTAssertEqual(sheet.current, "")
+        XCTAssertFalse(sheet.show)
+        XCTAssertFalse(sheet.hasTriggerSlot)
+    }
+
+    /// 上游 `created` 按 `valueKey` 匹配后取 `labelKey` 当回显文本。
+    func testActionSheetDataSeedsCurrentLabelFromModelValue() {
+        let options = [
+            UPActionSheetAction(name: "北京", values: ["name": "北京", "value": "bj"]),
+            UPActionSheetAction(name: "上海", values: ["name": "上海", "value": "sh"])
+        ]
+        XCTAssertEqual(
+            UPActionSheetData.label(for: "sh", in: options, valueKey: "value", labelKey: "name"),
+            "上海"
+        )
+        // 上游 modelValue 为空时 created 分支不跑，回显保持空串。
+        XCTAssertEqual(
+            UPActionSheetData.label(for: "", in: options, valueKey: "value", labelKey: "name"),
+            ""
+        )
+        // 匹配不到时上游的 forEach 不赋值，这里同样返回空串。
+        XCTAssertEqual(
+            UPActionSheetData.label(for: "gz", in: options, valueKey: "value", labelKey: "name"),
+            ""
+        )
+
+        var value = "bj"
+        let sheet = UPActionSheetData(
+            modelValue: Binding(get: { value }, set: { value = $0 }),
+            title: "请选择城市",
+            options: options
+        )
+        XCTAssertEqual(sheet.current, "北京")
+    }
+
+    /// 上游 `select(e)`：写回 `option[valueKey]`，回显换成 `option[labelKey]`。
+    func testActionSheetDataSelectWritesBackValueAndLabel() {
+        var value = ""
+        var changes: [String] = []
+        let options = [
+            UPActionSheetAction(name: "北京", values: ["name": "北京", "value": "bj"]),
+            UPActionSheetAction(name: "上海", values: ["name": "上海", "value": "sh"])
+        ]
+        let sheet = UPActionSheetData(
+            modelValue: Binding(get: { value }, set: { value = $0 }),
+            options: options
+        ).onChange { changes.append($0) }
+
+        sheet.open()
+        XCTAssertTrue(sheet.show)
+
+        sheet.select(options[1])
+        XCTAssertEqual(value, "sh")
+        XCTAssertEqual(sheet.current, "上海")
+        XCTAssertEqual(changes, ["sh"])
+
+        sheet.close()
+        XCTAssertFalse(sheet.show)
+    }
+
+    func testActionSheetDataExposesTriggerSlot() {
+        let plain = UPActionSheetData()
+        XCTAssertFalse(plain.hasTriggerSlot)
+        XCTAssertTrue(plain.trigger { Text("自定义触发器") }.hasTriggerSlot)
+    }
+
     #if os(macOS)
     func testActionSheetCanRenderIntoAFixedNativeCanvas() {
         let renderer = ImageRenderer(

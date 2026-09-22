@@ -6,7 +6,7 @@ import SwiftUI
 final class ModalTests: XCTestCase {
     func testDefaults() {
         let modal = UPModal(show: .constant(false))
-        XCTAssertEqual(modal.confirmText, "确认")
+        XCTAssertEqual(modal.confirmText, "确定")
         XCTAssertEqual(modal.cancelText, "取消")
         XCTAssertTrue(modal.showConfirmButton)
         XCTAssertFalse(modal.showCancelButton)
