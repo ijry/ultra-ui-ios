@@ -17,6 +17,10 @@ public struct UPPaginationPageSize: Equatable, Sendable, Identifiable {
 }
 
 /// Native counterpart of uview-plus `u-pagination`.
+///
+/// 上游是「上一页 + 页码列表 + 总数 + 每页条数选择器 + 下一页」五段，
+/// 由 `layout` 字符串里的关键字决定渲染哪几段。页码折叠规则见 `displayedPages`：
+/// 总页数不超过 4 时全列，否则按当前页靠头/靠尾/居中三分支插省略号。
 @MainActor
 public struct UPPagination: View {
     public var currentPage: Int
@@ -37,10 +41,14 @@ public struct UPPagination: View {
 
     public init(
         currentPage: Binding<Int>, pageSize: Binding<Int>,
-        total: Int = 0, prevText: String = "", nextText: String = "",
-        buttonBgColor: String = "#f5f7fa", buttonBorderColor: String = "#dcdfe6",
-        pageSizes: [Int] = [10, 20, 30, 40, 50], layout: String = "prev, pager, next",
-        hideOnSinglePage: Bool = false
+        total: Int = UPConfig.pagination.total,
+        prevText: String = UPConfig.pagination.prevText,
+        nextText: String = UPConfig.pagination.nextText,
+        buttonBgColor: String = UPConfig.pagination.buttonBgColor,
+        buttonBorderColor: String = UPConfig.pagination.buttonBorderColor,
+        pageSizes: [Int] = UPConfig.pagination.pageSizes,
+        layout: String = UPConfig.pagination.layout,
+        hideOnSinglePage: Bool = UPConfig.pagination.hideOnSinglePage
     ) {
         self.currentPage = currentPage.wrappedValue
         self.pageSize = pageSize.wrappedValue
@@ -57,11 +65,16 @@ public struct UPPagination: View {
     }
 
     public init(
-        currentPage: Int = 1, pageSize: Int = 10, total: Int = 0,
-        prevText: String = "", nextText: String = "",
-        buttonBgColor: String = "#f5f7fa", buttonBorderColor: String = "#dcdfe6",
-        pageSizes: [Int] = [10, 20, 30, 40, 50], layout: String = "prev, pager, next",
-        hideOnSinglePage: Bool = false
+        currentPage: Int = UPConfig.pagination.currentPage,
+        pageSize: Int = UPConfig.pagination.pageSize,
+        total: Int = UPConfig.pagination.total,
+        prevText: String = UPConfig.pagination.prevText,
+        nextText: String = UPConfig.pagination.nextText,
+        buttonBgColor: String = UPConfig.pagination.buttonBgColor,
+        buttonBorderColor: String = UPConfig.pagination.buttonBorderColor,
+        pageSizes: [Int] = UPConfig.pagination.pageSizes,
+        layout: String = UPConfig.pagination.layout,
+        hideOnSinglePage: Bool = UPConfig.pagination.hideOnSinglePage
     ) {
         self.currentPage = currentPage
         self.pageSize = pageSize
@@ -77,36 +90,139 @@ public struct UPPagination: View {
         self.pageSizeBinding = nil
     }
 
+    /// 上游 `hideOnSinglePage`：只有一页时整块不渲染。
+    public var isHidden: Bool { hideOnSinglePage && totalPages <= 1 }
+
+    /// 上游 `normalizedPageSizes`：把数字数组转成 `{ label, value }`，
+    /// 标签模板是 `${size}条/页`。
+    public var normalizedPageSizes: [UPPaginationPageSize] {
+        validPageSizes.map {
+            UPPaginationPageSize(label: "\($0)\(UPConfig.pagination.pageSizeLabelSuffix)", value: $0)
+        }
+    }
+
+    /// 上游 `pageSizeIndex`：找不到当前 `pageSize` 时回落 0。
+    public var pageSizeIndex: Int {
+        normalizedPageSizes.firstIndex { $0.value == selectedPageSize } ?? 0
+    }
+
+    /// 上游 `pageSizeLabel`：命中就用标签，否则直接显示数字。
+    public var pageSizeLabel: String {
+        normalizedPageSizes.first { $0.value == selectedPageSize }?.label ?? String(selectedPageSize)
+    }
+
+    /// 上游模板 `v-if="total > 0 && layout.includes('total')"`。
+    public var showsTotal: Bool { total > 0 && layoutParts.contains("total") }
+
+    /// 上游 `共 {{ total }} 条`。
+    public var totalText: String {
+        "\(UPConfig.pagination.totalPrefix)\(total)\(UPConfig.pagination.totalSuffix)"
+    }
+
     public var body: some View {
-        if !(hideOnSinglePage && totalPages <= 1) {
-            HStack(spacing: 6) {
-                if layoutParts.contains("prev") {
-                    pageButton(label: prevText.isEmpty ? "‹" : prevText, page: selectedPage - 1,
-                               disabled: selectedPage <= 1)
+        if !isHidden {
+            HStack(spacing: 0) {
+                if layoutParts.contains("prev") { prevButton }
+                if layoutParts.contains("pager") { pager }
+
+                if showsTotal {
+                    Text(totalText)
+                        .font(.system(size: UPConfig.pagination.fontSize))
+                        .foregroundStyle(UPColor.parse(UPConfig.pagination.textColor))
+                        .padding(.trailing, UPConfig.pagination.sectionSpacing)
                 }
-                if layoutParts.contains("pager") {
-                    ForEach(Array(tokens.enumerated()), id: \.offset) { _, token in
-                        switch token {
-                        case .page(let page):
-                            pageButton(label: String(page), page: page, disabled: false)
-                                .fontWeight(page == selectedPage ? .bold : .regular)
-                        case .ellipsis:
-                            Text("…")
-                        }
-                    }
-                }
-                if layoutParts.contains("next") {
-                    pageButton(label: nextText.isEmpty ? "›" : nextText, page: selectedPage + 1,
-                               disabled: selectedPage >= totalPages)
-                }
-                if layoutParts.contains("sizes") {
-                    Picker("", selection: Binding(get: { selectedPageSize }, set: { newValue in selectPageSize(newValue) })) {
-                        ForEach(validPageSizes, id: \.self) { Text("\($0)/页").tag($0) }
-                    }
-                    .labelsHidden()
+
+                if layoutParts.contains("sizes"), !normalizedPageSizes.isEmpty { sizePicker }
+                if layoutParts.contains("next") { nextButton }
+            }
+            .font(.system(size: UPConfig.pagination.fontSize))
+            .foregroundStyle(UPColor.parse(UPConfig.pagination.textColor))
+        }
+    }
+
+    /// 上游 `prevText` 为空时渲染 `arrow-left` 图标。
+    private var prevButton: some View {
+        navigationButton(text: prevText,
+                         icon: UPConfig.pagination.prevIcon,
+                         page: selectedPage - 1,
+                         disabled: selectedPage <= 1)
+    }
+
+    private var nextButton: some View {
+        navigationButton(text: nextText,
+                         icon: UPConfig.pagination.nextIcon,
+                         page: selectedPage + 1,
+                         disabled: selectedPage >= totalPages)
+    }
+
+    private func navigationButton(text: String,
+                                  icon: String,
+                                  page: Int,
+                                  disabled: Bool) -> some View {
+        Button { selectPage(page) } label: {
+            Group {
+                if text.isEmpty {
+                    UPIcon(name: icon, color: UPConfig.pagination.textColor)
+                } else {
+                    Text(text)
                 }
             }
+            .padding(UPConfig.pagination.buttonPadding)
+            .background(UPColor.parse(buttonBgColor))
+            .overlay {
+                RoundedRectangle(cornerRadius: UPConfig.pagination.cornerRadius)
+                    .stroke(UPColor.parse(buttonBorderColor), lineWidth: UPUnit.rpx(CGFloat(1)))
+            }
+            .clipShape(RoundedRectangle(cornerRadius: UPConfig.pagination.cornerRadius))
+            // 上游 `.disabled { opacity: 0.5 }` 只改透明度，点击仍走 goTo 的边界判定。
+            .opacity(disabled ? UPConfig.pagination.disabledOpacity : 1)
         }
+        .buttonStyle(.plain)
+        .padding(.horizontal, UPConfig.pagination.buttonSpacing)
+    }
+
+    /// 上游页码列表：激活项换 `#409eff` 底色 + 白字，省略号不可点。
+    private var pager: some View {
+        ForEach(Array(tokens.enumerated()), id: \.offset) { _, token in
+            switch token {
+            case let .page(page):
+                Button { selectPage(page) } label: {
+                    Text(String(page))
+                        .foregroundStyle(page == selectedPage
+                                         ? Color.white
+                                         : UPColor.parse(UPConfig.pagination.textColor))
+                        .padding(.horizontal, UPConfig.pagination.itemHorizontalPadding)
+                        .padding(.vertical, UPConfig.pagination.buttonPadding)
+                        .background(page == selectedPage
+                                    ? UPColor.parse(UPConfig.pagination.activeColor)
+                                    : Color.clear,
+                                    in: RoundedRectangle(cornerRadius: UPConfig.pagination.cornerRadius))
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, UPConfig.pagination.itemSpacing)
+            case .ellipsis:
+                Text("...")
+                    .padding(.horizontal, UPConfig.pagination.itemHorizontalPadding)
+                    .padding(.vertical, UPConfig.pagination.buttonPadding)
+            }
+        }
+    }
+
+    /// 上游 `<picker mode="selector">` 显示 `pageSizeLabel`，选中后抛 `size-change`。
+    private var sizePicker: some View {
+        Menu {
+            ForEach(normalizedPageSizes) { size in
+                Button(size.label) { selectPageSize(size.value) }
+            }
+        } label: {
+            Text(pageSizeLabel)
+                .padding(UPConfig.pagination.buttonPadding)
+                .overlay {
+                    RoundedRectangle(cornerRadius: UPConfig.pagination.cornerRadius)
+                        .stroke(UPColor.parse(buttonBorderColor), lineWidth: UPUnit.rpx(CGFloat(1)))
+                }
+        }
+        .padding(.trailing, UPConfig.pagination.sectionSpacing)
     }
 
     public var totalPages: Int {
@@ -180,16 +296,4 @@ public struct UPPagination: View {
         Set(layout.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() })
     }
 
-    private func pageButton(label: String, page: Int, disabled: Bool) -> some View {
-        Button(action: { selectPage(page) }) {
-            Text(label)
-        }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
-            .background(UPColor.parse(buttonBgColor))
-            .overlay(RoundedRectangle(cornerRadius: 4).stroke(UPColor.parse(buttonBorderColor)))
-            .clipShape(RoundedRectangle(cornerRadius: 4))
-            .disabled(disabled)
-    }
 }
