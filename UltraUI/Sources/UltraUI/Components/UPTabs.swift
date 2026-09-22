@@ -117,6 +117,7 @@ public struct UPTabs: View {
                   scrollable: scrollable, keyName: keyName, iconStyle: iconStyle,
                   shapeMode: shapeMode)
         self.current = current
+        self.uncontrolledState.index = current
     }
 
     public var body: some View {

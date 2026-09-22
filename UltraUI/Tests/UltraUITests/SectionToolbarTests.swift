@@ -27,7 +27,7 @@ final class SectionToolbarTests: XCTestCase {
 
         XCTAssertTrue(toolbar.show)
         XCTAssertEqual(toolbar.cancelText, "取消")
-        XCTAssertEqual(toolbar.confirmText, "确认")
+        XCTAssertEqual(toolbar.confirmText, "确定")
         toolbar.triggerCancel()
         toolbar.triggerConfirm()
         XCTAssertEqual(events, ["cancel", "confirm"])

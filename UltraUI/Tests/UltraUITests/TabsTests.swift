@@ -66,6 +66,44 @@ final class TabsTests: XCTestCase {
 
         XCTAssertEqual(tabs.selectedIndex, 1)
     }
+
+    func testUncontrolledTabsHonorInitialCurrentValue() {
+        let tabs = UPTabs(
+            list: [UPTabsItem(name: "推荐"), UPTabsItem(name: "关注"), UPTabsItem(name: "热榜")],
+            current: 2
+        )
+
+        XCTAssertEqual(tabs.current, 2)
+        XCTAssertEqual(tabs.selectedIndex, 2)
+    }
+
+    func testUncontrolledTabsClampOutOfRangeInitialCurrentValue() {
+        let tabs = UPTabs(list: [UPTabsItem(name: "推荐"), UPTabsItem(name: "关注")], current: 5)
+
+        XCTAssertEqual(tabs.selectedIndex, 1)
+    }
+
+    func testReselectingInitialCurrentTabClicksWithoutChange() {
+        var clicked: [Int] = []
+        var changed: [Int] = []
+        let tabs = UPTabs(
+            list: [UPTabsItem(name: "推荐"), UPTabsItem(name: "关注"), UPTabsItem(name: "热榜")],
+            current: 2
+        )
+        .onClick { clicked.append($0.index) }
+        .onChange { changed.append($0.index) }
+
+        tabs.select(2)
+
+        XCTAssertEqual(clicked, [2])
+        XCTAssertTrue(changed.isEmpty)
+
+        tabs.select(0)
+
+        XCTAssertEqual(clicked, [2, 0])
+        XCTAssertEqual(changed, [0])
+        XCTAssertEqual(tabs.selectedIndex, 0)
+    }
 }
 
 @MainActor
