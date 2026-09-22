@@ -1,16 +1,33 @@
 import Foundation
+import Observation
 import SwiftUI
 #if canImport(AVKit)
 import AVKit
 #endif
 
 @MainActor
-public final class UPShortVideo: View {
+@Observable
+private final class UPShortVideoState {
+    var isPlaying: Bool
+
+    init(isPlaying: Bool) {
+        self.isPlaying = isPlaying
+    }
+}
+
+/// 单条短视频播放器。
+///
+/// 上游 `u-short-video` 是一整屏的短视频流，它的四个 prop
+/// （`tabsList` / `videoList` / `currentTab` / `currentVideo`）与十个事件都在
+/// `UPShortVideoFeed` 里；本类型只承载「一条视频怎么播」，供 Feed 与宿主复用。
+@MainActor
+public struct UPShortVideo: View {
     public var src: String
     public var autoplay: Bool
     public var loop: Bool
     public var controls: Bool
-    public private(set) var isPlaying: Bool
+    public var isPlaying: Bool { state.isPlaying }
+    @State private var state: UPShortVideoState
     private var onPlayHandler: (() -> Void)?
     private var onPauseHandler: (() -> Void)?
     #if canImport(AVKit)
@@ -24,7 +41,7 @@ public final class UPShortVideo: View {
         self.autoplay = autoplay
         self.loop = loop
         self.controls = controls
-        self.isPlaying = autoplay
+        self._state = State(initialValue: UPShortVideoState(isPlaying: autoplay))
         self.onPlayHandler = onPlay
         self.onPauseHandler = onPause
         #if canImport(AVKit)
@@ -32,11 +49,11 @@ public final class UPShortVideo: View {
         #endif
     }
 
-    public func onPlay(_ action: @escaping () -> Void) -> UPShortVideo { onPlayHandler = action; return self }
-    public func onPause(_ action: @escaping () -> Void) -> UPShortVideo { onPauseHandler = action; return self }
+    public func onPlay(_ action: @escaping () -> Void) -> UPShortVideo { var copy = self; copy.onPlayHandler = action; return copy }
+    public func onPause(_ action: @escaping () -> Void) -> UPShortVideo { var copy = self; copy.onPauseHandler = action; return copy }
 
     public func play() {
-        isPlaying = true
+        state.isPlaying = true
         #if canImport(AVKit)
         player?.play()
         #endif
@@ -44,7 +61,7 @@ public final class UPShortVideo: View {
     }
 
     public func pause() {
-        isPlaying = false
+        state.isPlaying = false
         #if canImport(AVKit)
         player?.pause()
         #endif
