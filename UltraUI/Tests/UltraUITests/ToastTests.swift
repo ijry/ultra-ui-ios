@@ -4,12 +4,29 @@ import SwiftUI
 
 @MainActor
 final class ToastTests: XCTestCase {
+    /// 上游 `iconName` 走 `type2icon`：primary/success/error/warning 有内建图标，
+    /// info/loading/default/未知 回落空串。
     func testTypeIcon() {
-        XCTAssertEqual(UPToast.iconName(for: "success"), "uicon-checkmark")
-        XCTAssertEqual(UPToast.iconName(for: "error"), "uicon-close")
-        XCTAssertEqual(UPToast.iconName(for: "warning"), "uicon-info-circle")
+        XCTAssertEqual(UPToast.iconName(for: "success"), "checkmark-circle")
+        XCTAssertEqual(UPToast.iconName(for: "error"), "close-circle")
+        XCTAssertEqual(UPToast.iconName(for: "warning"), "error-circle")
+        XCTAssertEqual(UPToast.iconName(for: "primary"), "info-circle")
+        XCTAssertEqual(UPToast.iconName(for: "info"), "")
         XCTAssertEqual(UPToast.iconName(for: "loading"), "")
         XCTAssertEqual(UPToast.iconName(for: "default"), "")
+    }
+
+    /// 上游 `iconName` computed 的完整判定：
+    /// - icon 为空或 "none" → 空串
+    /// - icon === true（配置默认）→ 仅 primary/success/error/warning 走 type2icon
+    /// - icon 为具体字符串 → 原样返回
+    func testResolvedIconNameMatchesUpstreamComputed() {
+        XCTAssertEqual(UPToast.resolvedIconName(icon: "", type: "success"), "")
+        XCTAssertEqual(UPToast.resolvedIconName(icon: "none", type: "success"), "")
+        XCTAssertEqual(UPToast.resolvedIconName(icon: "true", type: "success"), "checkmark-circle")
+        XCTAssertEqual(UPToast.resolvedIconName(icon: "true", type: "info"), "")
+        XCTAssertEqual(UPToast.resolvedIconName(icon: "true", type: "default"), "")
+        XCTAssertEqual(UPToast.resolvedIconName(icon: "star-fill", type: "success"), "star-fill")
     }
 
     func testPositionAlignment() {

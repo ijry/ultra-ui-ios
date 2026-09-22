@@ -183,13 +183,27 @@ public enum UPToast {
         UPToastCenter.shared.hide()
     }
 
+    /// 上游 `type2icon` 在 toast 语境下的结果：primary → info-circle，
+    /// error → close-circle，warning → error-circle，success → checkmark-circle；
+    /// info/loading/default/未知回落空串（上游 iconName 只对 primary/success/error/
+    /// warning 调 type2icon，故 info 在 toast 下拿不到图标）。
     public static func iconName(for type: String) -> String {
         switch type {
-        case "success": return "uicon-checkmark"
-        case "error": return "uicon-close"
-        case "warning": return "uicon-info-circle"
+        case "success": return "checkmark-circle"
+        case "error": return "close-circle"
+        case "warning": return "error-circle"
+        case "primary": return "info-circle"
         default: return ""
         }
+    }
+
+    /// 上游 `iconName` computed 的完整判定：icon 为假值/"none" → 空串；
+    /// icon 为 true（配置默认，本包用字符串 "true"）→ 仅 primary/success/error/
+    /// warning 走 type2icon；icon 为具体图标名 → 原样返回。
+    public static func resolvedIconName(icon: String, type: String) -> String {
+        if icon.isEmpty || icon == "none" { return "" }
+        if icon == "true" { return iconName(for: type) }
+        return icon
     }
 
     public static func alignment(for position: String) -> Alignment {
