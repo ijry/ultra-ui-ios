@@ -4,16 +4,19 @@ uview-plus 的 SwiftUI 原生实现。项目提供可独立引用的 `UltraUI` S
 
 ## 已实现组件
 
-- `UPButton`：主题、尺寸、圆角、镂空、加载、图标、节流与 `onTap` / `onClick` 事件
-- `UPPopup`：四边 / 居中弹出、遮罩、关闭按钮与打开/关闭/遮罩点击事件
-- `UPModal`：确认/取消、异步关闭、自定义内容与事件回调
-- `UPToast`：全局命令式 `show` / `hide` API 与声明式展示层
-- `UPOverlay`
-- `UPIcon`：内置图标字体与标签
-- `UPLine`、`UPGap`、`UPLoadingIcon`
-- `UPForm`、`UPFormItem`：嵌套 `prop` 路径、规则校验、错误展示与控制器 API
-- `UPInput`：表单 / 直接绑定、密码、清除、字数统计、只读与禁用状态
-- `UPTextarea`：多行输入、自动高度、字数统计、只读与禁用状态
+上游 uview-plus `3.8.113` 的 `components/u-*` 共 140 个目录已全部有对应的 `UP` 前缀 SwiftUI 类型。逐个组件的复刻进度、接口兼容性评级，以及小程序 / DOM / CSS 能力在原生下的适配取舍，见 [UVIEW_PLUS_PROGRESS.md](UVIEW_PLUS_PROGRESS.md)。
+
+Demo App 与上游示例工程的组件页面一一对应，共 103 页，沿用上游的 7 个分类：
+
+| 分类 | 页面数 | 代表组件 |
+| --- | ---: | --- |
+| 基础组件 | 11 | `UPButton`、`UPIcon`、`UPImage`、`UPText` |
+| 表单组件 | 20 | `UPForm`、`UPInput`、`UPPicker`、`UPCalendar` |
+| 数据组件 | 7 | `UPTable`、`UPTable2`、`UPVirtualList`、`UPLineProgress` |
+| 反馈组件 | 17 | `UPToast`、`UPModal`、`UPActionSheet`、`UPPopover` |
+| 布局组件 | 15 | `UPPopup`、`UPCard`、`UPOverlay`、`UPScrollList` |
+| 导航组件 | 12 | `UPTabs`、`UPTabbar`、`UPNavbar`、`UPDropdown` |
+| 其他组件 | 21 | `UPParse`、`UPMarkdown`、`UPCodeInput`、`UPDragsort` |
 
 ## 要求
 
@@ -101,5 +104,7 @@ swift test --package-path UltraUI
 xcodebuild -project UltraUIDemo.xcodeproj \
   -scheme UltraUIDemo \
   -destination 'platform=iOS Simulator,name=iPhone 17' \
-  build CODE_SIGNING_ALLOWED=NO
+  test
 ```
+
+两条命令跑的是同一份 `UltraUI/Tests`：前者在宿主平台执行，后者在模拟器上额外覆盖 Demo 的路由契约测试。新增测试文件或 Demo 页后必须先执行 `xcodegen generate`，否则新文件不会进入 Xcode 工程，模拟器全量测试会静默漏跑。这一步现由 `ProjectGenerationContractTests` 在 `swift test` 中强制校验：它会比对 `Demo` 与 `UltraUI/Tests` 下的全部源文件和生成工程的 Sources 编译阶段，漏掉的文件会直接让宿主平台测试失败。
