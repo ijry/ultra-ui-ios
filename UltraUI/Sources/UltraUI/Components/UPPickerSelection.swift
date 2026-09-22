@@ -1,31 +1,207 @@
 import SwiftUI
 
-public struct UPCascaderNode: Identifiable, Equatable, Sendable { public let id: String; public var value: String; public var label: String; public var children: [Self]; public init(id: String? = nil, value: String, label: String, children: [Self] = []) { self.id = id ?? value; self.value = value; self.label = label; self.children = children } }
-@MainActor private final class UPCascadeSelection { var values: [String] = [] }
-@MainActor public struct UPCascader: View {
-    public var data: [UPCascaderNode]; public var show: Bool; public var valueKey: String; public var labelKey: String; public var childrenKey: String; public var maskCloseAble: Bool; public var zIndex: CGFloat; public var autoClose: Bool; public var headerDirection: String; public var optionsCols: Int; public var closeable: Bool
-    private var modelValue: Binding<[String]>?; private let selection = UPCascadeSelection(); private var onChangeHandler: (([String]) -> Void)?; private var onConfirmHandler: (([String]) -> Void)?; private var onCancelHandler: (() -> Void)?
-    public init(data: [UPCascaderNode] = [], modelValue: Binding<[String]>? = nil, show: Bool = false, valueKey: String = "value", labelKey: String = "label", childrenKey: String = "children", maskCloseAble: Bool = true, zIndex: some UPImageUnitValue = 0, autoClose: Bool = false, headerDirection: String = "row", optionsCols: Int = 2, closeable: Bool = true) { self.data = data; self.modelValue = modelValue; self.show = show; self.valueKey = valueKey; self.labelKey = labelKey; self.childrenKey = childrenKey; self.maskCloseAble = maskCloseAble; self.zIndex = UPUnit.parse(zIndex.upImageUnitValue); self.autoClose = autoClose; self.headerDirection = headerDirection; self.optionsCols = optionsCols; self.closeable = closeable; selection.values = modelValue?.wrappedValue ?? [] }
-    public var body: some View { List(data) { Text($0.label) } }
-    public func select(path: [Int]) { var nodes = data; var values: [String] = []; for index in path { guard nodes.indices.contains(index) else { break }; let node = nodes[index]; values.append(node.value); nodes = node.children }; selection.values = values; onChangeHandler?(values); if autoClose, nodes.isEmpty { confirm() } }
-    public func confirm() { modelValue?.wrappedValue = selection.values; onConfirmHandler?(selection.values) }; public func cancel() { onCancelHandler?() }
-    public func onChange(_ a: @escaping ([String]) -> Void) -> Self { var c = self; c.onChangeHandler = a; return c }; public func onConfirm(_ a: @escaping ([String]) -> Void) -> Self { var c = self; c.onConfirmHandler = a; return c }; public func onCancel(_ a: @escaping () -> Void) -> Self { var c = self; c.onCancelHandler = a; return c }
+/// 上游 `options` 里的一个元素：`item[labelName]` 当显示文本、`item[valueName]` 当值。
+public struct UPChooseOption: Identifiable, Equatable, Sendable {
+    public var value: String
+    public var title: String
+    public var id: String { value }
+
+    public init(value: String, title: String) {
+        self.value = value
+        self.title = title
+    }
 }
 
-public struct UPSelectOption: Identifiable, Equatable, Sendable { public let id: String; public var name: String; public init(id: String, name: String) { self.id = id; self.name = name } }
-@MainActor public struct UPSelect: View {
-    public var options: [UPSelectOption]; public var current: String; public var maxHeight: String; public var overlay: Bool; public var overlayOpacity: Double; public var duration: Int; public var label: String; public var keyName: String; public var labelName: String; public var showOptionsLabel: Bool; public var zIndex: CGFloat; public var disabled: Bool; public var border: Bool; public var optionsWidth: String
-    private var currentBinding: Binding<String>?; private var onSelectHandler: ((UPSelectOption) -> Void)?
-    public init(options: [UPSelectOption] = [], current: Binding<String>? = nil, maxHeight: String = "90vh", overlay: Bool = true, overlayOpacity: Double = 0.01, duration: Int = 300, label: String = "选项", keyName: String = "id", labelName: String = "name", showOptionsLabel: Bool = false, zIndex: CGFloat = 11000, disabled: Bool = false, border: Bool = false, optionsWidth: String = "") { self.options = options; self.currentBinding = current; self.current = current?.wrappedValue ?? ""; self.maxHeight = maxHeight; self.overlay = overlay; self.overlayOpacity = overlayOpacity; self.duration = duration; self.label = label; self.keyName = keyName; self.labelName = labelName; self.showOptionsLabel = showOptionsLabel; self.zIndex = zIndex; self.disabled = disabled; self.border = border; self.optionsWidth = optionsWidth }
-    public var body: some View { Menu(label) { ForEach(options) { option in Button(option.name) { select(option.id) } } }.disabled(disabled) }
-    public func select(_ id: String) { guard !disabled, let option = options.first(where: { $0.id == id }) else { return }; currentBinding?.wrappedValue = id; onSelectHandler?(option) }; public func onSelect(_ a: @escaping (UPSelectOption) -> Void) -> Self { var c = self; c.onSelectHandler = a; return c }
+/// 对应上游 `data.currentIndex`。
+@MainActor
+@Observable
+private final class UPChooseState {
+    /// 上游 `currentIndex` 初始是空串，`watch.modelValue` 会把它直接改写成 `modelValue`。
+    var currentIndex: Int?
+
+    init(_ index: Int?) { self.currentIndex = index }
 }
 
-public struct UPChooseOption: Identifiable, Equatable, Sendable { public var value: String; public var title: String; public var id: String { value }; public init(value: String, title: String) { self.value = value; self.title = title } }
-@MainActor public struct UPChoose: View {
-    public var options: [UPChooseOption]; public var type: String; public var itemWidth: String; public var itemHeight: String; public var itemPadding: String; public var labelName: String; public var valueName: String; public var customClick: Bool; public var wrap: Bool
-    private var modelValue: Binding<String>?; private var onCustomClickHandler: ((String) -> Void)?
-    public init(options: [UPChooseOption] = [], modelValue: Binding<String>? = nil, type: String = "radio", itemWidth: String = "auto", itemHeight: String = "50px", itemPadding: String = "8px", labelName: String = "title", valueName: String = "value", customClick: Bool = false, wrap: Bool = true) { self.options = options; self.modelValue = modelValue; self.type = type; self.itemWidth = itemWidth; self.itemHeight = itemHeight; self.itemPadding = itemPadding; self.labelName = labelName; self.valueName = valueName; self.customClick = customClick; self.wrap = wrap }
-    public var body: some View { HStack { ForEach(options) { option in Button(option.title) { select(option.value) } } } }
-    public func select(_ value: String) { if customClick { onCustomClickHandler?(value) } else { modelValue?.wrappedValue = value } }; public func onCustomClick(_ a: @escaping (String) -> Void) -> Self { var c = self; c.onCustomClickHandler = a; return c }
+/// Native SwiftUI counterpart of uview-plus `u-choose`.
+///
+/// 上游是一排 `up-tag`：激活项实心 `primary`、其余描边 `info`，`wrap` 决定换行还是横向滚动。
+/// 注意上游是**按下标**工作的：`change(index)` 往 `update:modelValue` 里写的是下标，
+/// `custom-click` 抛出的也是下标。原生保留这套下标语义，同时保留仓库既有的按值接口。
+@MainActor
+public struct UPChoose: View {
+    public var options: [UPChooseOption]
+    /// 上游 `type`：声明为 `radio`，但代码里从未被读取。
+    public var type: String
+    public var itemWidth: String
+    public var itemHeight: String
+    public var itemPadding: String
+    /// 上游 `labelName`：取显示文本的字段名，默认 `title`。
+    public var labelName: String
+    /// 上游 `valueName`：默认 `value`，但上游模板与方法里都没用到它。
+    public var valueName: String
+    /// 上游 `customClick`：为真时只抛 `custom-click`，不写回 `modelValue`。
+    public var customClick: Bool
+    /// 上游 `wrap`：真则折行，假则横向滚动。
+    public var wrap: Bool
+
+    private var modelValue: Binding<String>?
+    private var indexBinding: Binding<Int>?
+    @State private var state: UPChooseState
+    private var onCustomClickHandler: ((String) -> Void)?
+    private var onCustomClickIndexHandler: ((Int) -> Void)?
+    private var onChangeHandler: ((Int) -> Void)?
+    private var itemSlot: ((UPChooseOption, Int) -> AnyView)?
+
+    @Environment(\.upTheme) private var theme
+
+    /// 与上游 `props` 对齐的初始化器；`modelValue` 是仓库既有的按值绑定。
+    public init(options: [UPChooseOption] = [],
+                modelValue: Binding<String>? = nil,
+                currentIndex: Binding<Int>? = nil,
+                type: String = UPConfig.choose.type,
+                itemWidth: String = UPConfig.choose.itemWidth,
+                itemHeight: String = UPConfig.choose.itemHeight,
+                itemPadding: String = UPConfig.choose.itemPadding,
+                labelName: String = UPConfig.choose.labelName,
+                valueName: String = UPConfig.choose.valueName,
+                customClick: Bool = UPConfig.choose.customClick,
+                wrap: Bool = UPConfig.choose.wrap) {
+        self.options = options
+        self.modelValue = modelValue
+        self.indexBinding = currentIndex
+        self.type = type
+        self.itemWidth = itemWidth
+        self.itemHeight = itemHeight
+        self.itemPadding = itemPadding
+        self.labelName = labelName
+        self.valueName = valueName
+        self.customClick = customClick
+        self.wrap = wrap
+        // 上游 `watch.modelValue` 带 immediate，挂载时就把 currentIndex 同步成传入值。
+        let seeded: Int?
+        if let index = currentIndex?.wrappedValue {
+            seeded = index
+        } else if let value = modelValue?.wrappedValue,
+                  let index = options.firstIndex(where: { $0.value == value }) {
+            seeded = index
+        } else {
+            seeded = nil
+        }
+        self._state = State(initialValue: UPChooseState(seeded))
+    }
+
+    // MARK: - 解析后的呈现值
+
+    /// 上游 `currentIndex`。
+    public var currentIndex: Int? { state.currentIndex }
+
+    /// 上游模板 `index == currentIndex`。
+    public func isActive(_ index: Int) -> Bool { state.currentIndex == index }
+
+    /// 上游默认插槽里 `up-tag` 的 `type`：激活 `primary`、其余 `info`。
+    public func tagType(at index: Int) -> String {
+        isActive(index) ? UPConfig.choose.activeType : UPConfig.choose.inactiveType
+    }
+
+    /// 上游 `:plain="index == currentIndex ? false : true"`。
+    public func isPlain(at index: Int) -> Bool { !isActive(index) }
+
+    /// 上游 `itemWidth` 是 `auto` 时交给内容自适应。
+    public var resolvedItemWidth: CGFloat? {
+        let parsed = UPUnit.parse(itemWidth)
+        return parsed > 0 ? parsed : nil
+    }
+
+    public var resolvedItemHeight: CGFloat { max(UPUnit.parse(itemHeight), 0) }
+    public var resolvedItemPadding: CGFloat { max(UPUnit.parse(itemPadding), 0) }
+
+    // MARK: - 上游 methods
+
+    /// 上游 `change(index)`：`customClick` 为真只抛 `custom-click`，否则写回下标。
+    public func change(_ index: Int) {
+        guard options.indices.contains(index) else { return }
+        if customClick {
+            onCustomClickIndexHandler?(index)
+            onCustomClickHandler?(options[index].value)
+            return
+        }
+        state.currentIndex = index
+        indexBinding?.wrappedValue = index
+        modelValue?.wrappedValue = options[index].value
+        onChangeHandler?(index)
+    }
+
+    /// 仓库既有方法：按值选中。
+    public func select(_ value: String) {
+        guard let index = options.firstIndex(where: { $0.value == value }) else { return }
+        change(index)
+    }
+
+    // MARK: - 事件
+
+    /// 仓库既有签名：负载是选项值。
+    public func onCustomClick(_ action: @escaping (String) -> Void) -> Self {
+        var copy = self
+        copy.onCustomClickHandler = action
+        return copy
+    }
+
+    /// 对应上游 `custom-click` 事件，负载是下标。
+    public func onCustomClick(_ action: @escaping (Int) -> Void) -> Self {
+        var copy = self
+        copy.onCustomClickIndexHandler = action
+        return copy
+    }
+
+    /// 对应上游 `update:modelValue`，负载是下标。
+    public func onChange(_ action: @escaping (Int) -> Void) -> Self {
+        var copy = self
+        copy.onChangeHandler = action
+        return copy
+    }
+
+    // MARK: - 插槽
+
+    /// 对应上游默认作用域插槽，参数是 `item` 与 `index`。
+    public func itemContent<Slot: View>(@ViewBuilder _ builder: @escaping (UPChooseOption, Int) -> Slot) -> Self {
+        var copy = self
+        copy.itemSlot = { AnyView(builder($0, $1)) }
+        return copy
+    }
+
+    public var hasItemSlot: Bool { itemSlot != nil }
+
+    // MARK: - 视图
+
+    public var body: some View {
+        Group {
+            if wrap {
+                // 上游 `.up-choose-wrap { flex-wrap: wrap }`。
+                UPAlbumWrapLayout(spacing: 8, lineSpacing: 8) { items }
+            } else {
+                // 上游 `scroll-x` 只在 `wrap === false` 时开启。
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) { items }
+                }
+            }
+        }
+    }
+
+    private var items: some View {
+        ForEach(Array(options.enumerated()), id: \.offset) { index, option in
+            if let itemSlot {
+                itemSlot(option, index)
+            } else {
+                UPTag(type: tagType(at: index),
+                      size: UPConfig.choose.tagSize,
+                      text: option.title,
+                      plain: isPlain(at: index),
+                      height: itemHeight) {
+                    change(index)
+                }
+                .frame(width: resolvedItemWidth)
+                .padding(resolvedItemPadding)
+            }
+        }
+    }
 }

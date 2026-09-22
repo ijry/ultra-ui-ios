@@ -55,6 +55,40 @@ public struct UPPickerData: Identifiable, Equatable, Sendable {
     }
 }
 
+public extension UPPickerData {
+    /// 上游 `u-picker-data` 的 `valueKey` 默认值。
+    static let defaultValueKey = "id"
+    /// 上游 `u-picker-data` 的 `labelKey` 默认值。
+    static let defaultLabelKey = "name"
+
+    /// 对应上游 `options` 里的一个对象元素：`ele[valueKey]` 当值、`ele[labelKey]` 当显示文本。
+    init?(object: [String: String],
+          valueKey: String = UPPickerData.defaultValueKey,
+          labelKey: String = UPPickerData.defaultLabelKey) {
+        let value = object[valueKey]
+        let label = object[labelKey]
+        // 上游按 `ele[valueKey] == modelValue` 匹配、取 `ele[labelKey]` 显示，
+        // 两个键都取不到就没法参与选择。
+        guard value != nil || label != nil else { return nil }
+        self.init(id: value, text: label ?? value ?? "", value: value)
+    }
+
+    /// 把上游 `options`（对象数组）整列转成 `UPPickerData`。
+    static func options(_ objects: [[String: String]],
+                        valueKey: String = UPPickerData.defaultValueKey,
+                        labelKey: String = UPPickerData.defaultLabelKey) -> [UPPickerData] {
+        objects.compactMap { UPPickerData(object: $0, valueKey: valueKey, labelKey: labelKey) }
+    }
+
+    /// 对应上游 `created` / `watch.modelValue` 里按 `modelValue` 找默认下标的逻辑。
+    static func defaultIndex(for modelValue: String, in options: [UPPickerData]) -> [Int] {
+        guard !modelValue.isEmpty, let index = options.firstIndex(where: { $0.value == modelValue }) else {
+            return []
+        }
+        return [index]
+    }
+}
+
 /// Event payload shared by `change` and `confirm`.
 ///
 /// `values` and `indices` are retained for source compatibility with the
@@ -215,7 +249,7 @@ public struct UPPicker: View {
         loading: Bool = false,
         itemHeight: some UPPickerUnitValue = 44,
         cancelText: String = "取消",
-        confirmText: String = "确认",
+        confirmText: String = "确定",
         cancelColor: String = "#909193",
         confirmColor: String = "",
         visibleItemCount: some UPPickerUnitValue = 5,
@@ -287,7 +321,7 @@ public struct UPPicker: View {
         loading: Bool = false,
         itemHeight: some UPPickerUnitValue = 44,
         cancelText: String = "取消",
-        confirmText: String = "确认",
+        confirmText: String = "确定",
         cancelColor: String = "#909193",
         confirmColor: String = "",
         visibleItemCount: some UPPickerUnitValue = 5,
