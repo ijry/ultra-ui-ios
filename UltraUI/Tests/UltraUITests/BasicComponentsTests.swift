@@ -27,4 +27,67 @@ final class BasicComponentsTests: XCTestCase {
         XCTAssertEqual(l.size, 24)
         XCTAssertEqual(l.color, "#909399")
     }
+
+    /// 上游 `libs/config/props/loadingIcon.js` 的默认值：`color` / `textColor`
+    /// 都取 `config.color['u-tips-color']`（`#909399`）。
+    func testLoadingIconPropDefaultsMatchUpstream() {
+        XCTAssertTrue(UPConfig.loadingIcon.show)
+        XCTAssertEqual(UPConfig.loadingIcon.textColor, "#909399")
+        XCTAssertFalse(UPConfig.loadingIcon.vertical)
+        XCTAssertEqual(UPConfig.loadingIcon.mode, "spinner")
+        XCTAssertEqual(UPConfig.loadingIcon.size, 24)
+        XCTAssertEqual(UPConfig.loadingIcon.textSize, 15)
+        XCTAssertEqual(UPConfig.loadingIcon.text, "")
+        XCTAssertEqual(UPConfig.loadingIcon.timingFunction, "ease-in-out")
+        XCTAssertEqual(UPConfig.loadingIcon.duration, 1200)
+        XCTAssertEqual(UPConfig.loadingIcon.inactiveColor, "")
+        XCTAssertEqual(UPConfig.loadingIcon.spinnerDotCount, 12)
+
+        let loading = UPLoadingIcon()
+        XCTAssertEqual(loading.textColor, "#909399")
+        XCTAssertFalse(loading.vertical)
+        XCTAssertEqual(loading.textSize, 15)
+        XCTAssertEqual(loading.duration, 1200)
+        XCTAssertFalse(loading.showsText)
+        XCTAssertTrue(loading.customStyle.properties.isEmpty)
+        XCTAssertTrue(UPLoadingIcon(text: "加载中").showsText)
+    }
+
+    /// 上游 `otherBorderColor`：只有 circle 模式才有暗边，
+    /// `inactiveColor` 优先，否则 `colorGradient(color, '#ffffff', 100)[80]`。
+    func testLoadingIconOtherBorderColorMatchesUpstream() {
+        // spinner / semicircle 一律 transparent。
+        XCTAssertEqual(UPLoadingIcon().otherBorderColor, "transparent")
+        XCTAssertEqual(UPLoadingIcon(mode: "semicircle").otherBorderColor, "transparent")
+
+        // circle 且未给 inactiveColor 时往白色插值 80%。
+        XCTAssertEqual(UPLoadingIcon(mode: "circle").otherBorderColor, "#e9e9eb")
+        XCTAssertEqual(UPLoadingIcon(color: "#3c9cff", mode: "circle").otherBorderColor, "#d8ebff")
+
+        // inactiveColor 优先。
+        XCTAssertEqual(UPLoadingIcon(mode: "circle", inactiveColor: "#eeeeee").otherBorderColor, "#eeeeee")
+
+        // 三位十六进制会先补全再插值。
+        XCTAssertEqual(UPLoadingIcon.lightened("#000"), "#cccccc")
+        // 非十六进制原样返回（上游 hexToRgb 对语义色名也无能为力）。
+        XCTAssertEqual(UPLoadingIcon.lightened("primary"), "primary")
+    }
+
+    /// 上游 `.__dot:nth-of-type(i) { opacity: 1 - 0.0625 * (i - 1) }`。
+    func testLoadingIconSpinnerDotOpacityMatchesUpstream() {
+        XCTAssertEqual(UPLoadingIcon.dotOpacity(at: 0), 1)
+        XCTAssertEqual(UPLoadingIcon.dotOpacity(at: 1), 0.9375)
+        XCTAssertEqual(UPLoadingIcon.dotOpacity(at: 11), 0.3125, accuracy: 0.0001)
+    }
+
+    /// 上游 `.__spinner` 的 CSS 动画写死 `1s linear`，只有 circle / semicircle
+    /// 会被内联 style 换成 `duration` + `timingFunction`。
+    func testLoadingIconRotationAnimationDependsOnMode() {
+        XCTAssertEqual(UPLoadingIcon(mode: "spinner").rotationAnimation,
+                       .linear(duration: 1))
+        XCTAssertEqual(UPLoadingIcon(mode: "circle", duration: 600).rotationAnimation,
+                       UPLoadingIcon.animation(for: "ease-in-out", duration: 600))
+        XCTAssertEqual(UPLoadingIcon(mode: "semicircle", timingFunction: "linear", duration: 800).rotationAnimation,
+                       .linear(duration: 0.8))
+    }
 }
