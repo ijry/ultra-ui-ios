@@ -73,6 +73,8 @@ public struct UPSlider: View {
     private var onRangeChangingHandler: ((UPSliderRangeValue) -> Void)?
     private var onRangeChangeHandler: ((UPSliderRangeValue) -> Void)?
 
+    @Environment(\.upTheme) private var theme
+
     public init<Value: UPSliderValueInput, Block: UPSliderValueInput, Min: UPSliderValueInput, Max: UPSliderValueInput, Step: UPSliderValueInput>(
         value: Value = 0, blockSize: Block = 18, min: Min = 0, max: Max = 100, step: Step = 1,
         activeColor: String = "#2979ff", inactiveColor: String = "#c0c4cc", blockColor: String = "#ffffff",
@@ -147,42 +149,162 @@ public struct UPSlider: View {
         self.rangeBinding = rangeValue
     }
 
+    // MARK: - 上游 computed
+
+    /// 上游 `sizeLocal`：`height` 非空时取它，否则取 `size`（默认 `2px`）。
+    public var resolvedTrackThickness: CGFloat {
+        let raw = height.isEmpty ? size : height
+        let parsed = UPUnit.parse(raw)
+        return parsed > 0 ? parsed : UPUnit.parse(UPConfig.slider.size)
+    }
+
+    /// 上游 `innerStyleCpu`：容器厚度是 `blockSize`，区间 + showValue 时再多 24。
+    public var resolvedInnerThickness: CGFloat {
+        let base = CGFloat(blockSize)
+        return isRange && showValue ? base + UPConfig.slider.rangeValueExtraSpace : base
+    }
+
+    /// 上游 `updateValue` 里的 `sliderLength`：值在轨道上的占比长度。
+    public func fillLength(for value: Double, trackLength: CGFloat) -> CGFloat {
+        let range = upperBound - lowerBound
+        guard range > 0, trackLength > 0 else { return 0 }
+        let ratio = (normalize(value) - lowerBound) / range
+        return Swift.min(CGFloat(ratio) * trackLength, trackLength)
+    }
+
+    /// 上游 `touchButtonStyle`：滑块中心落在填充长度加半个 `blockSize` 处。
+    public func blockOffset(for value: Double, trackLength: CGFloat) -> CGFloat {
+        fillLength(for: value, trackLength: trackLength) + CGFloat(blockSize) / 2
+    }
+
+    // MARK: - 视图
+
     public var body: some View {
         Group {
-            if isRange { rangeBody } else { singleBody }
+            if useNative, !isRange { nativeBody } else { customBody }
         }
-        .frame(height: vertical ? nil : (height.isEmpty ? 24 : UPUnit.parse(height)))
-        .frame(width: vertical ? (length == "auto" ? 24 : UPUnit.parse(length)) : nil)
+        // 上游 `--disabled { opacity: 0.5 }`。
+        .opacity(disabled ? UPConfig.slider.disabledOpacity : 1)
+    }
+
+    /// 上游 `useNative && !isRange` 时直接用平台原生 `<slider>`。
+    private var nativeBody: some View {
+        HStack(spacing: UPConfig.slider.showValueSpacing) {
+            Slider(value: Binding(get: { currentValue }, set: { updateValue($0, changing: true) }),
+                   in: lowerBound...upperBound,
+                   step: normalizedStep,
+                   onEditingChanged: { editing in
+                       if editing { startInteraction() } else { endInteraction() }
+                   })
+                .tint(UPColor.parse(activeColor))
+                .disabled(disabled)
+
+            if showValue { Text(format(currentValue)).font(.system(size: 14)) }
+        }
+    }
+
+    /// 上游自绘形态：底轨 `__base` + 填充 `__gap` + 一或两个 `__button`。
+    private var customBody: some View {
+        HStack(spacing: UPConfig.slider.showValueSpacing) {
+            trackArea
+
+            // 上游 `.__show-value` 只在非区间时渲染在轨道右侧。
+            if showValue, !isRange { Text(format(currentValue)).font(.system(size: 14)) }
+        }
         .upStyle(innerStyle)
     }
 
-    @ViewBuilder private var singleBody: some View {
-        Slider(value: Binding(get: { currentValue }, set: { updateValue($0, changing: true) }),
-               in: lowerBound...upperBound, step: normalizedStep,
-               onEditingChanged: { editing in
-                   if editing { startInteraction() } else { endInteraction() }
-               })
-            .tint(UPColor.parse(activeColor))
-            .disabled(disabled)
-            .rotationEffect(vertical ? .degrees(-90) : .zero)
-        if showValue { Text(format(currentValue)).font(.caption) }
+    private var trackArea: some View {
+        GeometryReader { proxy in
+            let trackLength = vertical ? proxy.size.height : proxy.size.width
+            ZStack(alignment: vertical ? .top : .leading) {
+                // 上游 `__base`：全长底轨，颜色取 `inactiveColor`。
+                Capsule()
+                    .fill(UPColor.parse(inactiveColor, theme: theme))
+                    .frame(width: vertical ? resolvedTrackThickness : nil,
+                           height: vertical ? nil : resolvedTrackThickness)
+                    .frame(maxWidth: vertical ? nil : .infinity,
+                           maxHeight: vertical ? .infinity : nil)
+
+                // 上游 `__gap`：填充段，颜色取 `activeColor`。区间模式下另有一段
+                // `__gap-0` 用 `inactiveColor` 盖住下把手左侧。
+                fill(from: isRange ? currentRange.lower : lowerBound,
+                     to: isRange ? currentRange.upper : currentValue,
+                     trackLength: trackLength)
+
+                if isRange {
+                    block(for: currentRange.lower, trackLength: trackLength) { changeLower(to: $0) }
+                    block(for: currentRange.upper, trackLength: trackLength) { changeUpper(to: $0) }
+                } else {
+                    block(for: currentValue, trackLength: trackLength) { updateValue($0, changing: true) }
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: vertical ? .top : .leading)
+        }
+        .frame(width: vertical ? resolvedInnerThickness : resolvedTrackLength,
+               height: vertical ? resolvedTrackLength : resolvedInnerThickness)
+        .padding(vertical ? .vertical : .horizontal, UPConfig.slider.innerHorizontalPadding)
+        .padding(vertical ? .horizontal : .vertical, UPConfig.slider.innerVerticalPadding)
     }
 
-    @ViewBuilder private var rangeBody: some View {
-        HStack(spacing: 0) {
-            Slider(value: Binding(get: { currentRange.lower }, set: { changeLower(to: $0) }),
-                   in: lowerBound...upperBound, step: normalizedStep,
-                   onEditingChanged: { editing in
-                       if editing { startInteraction() } else { endRangeInteraction() }
-                   })
-            Slider(value: Binding(get: { currentRange.upper }, set: { changeUpper(to: $0) }),
-                   in: lowerBound...upperBound, step: normalizedStep,
-                   onEditingChanged: { editing in
-                       if editing { startInteraction() } else { endRangeInteraction() }
-                   })
-        }
-        .tint(UPColor.parse(activeColor))
-        .disabled(disabled)
+    /// 上游 `length` 默认 `auto`，此时轨道随容器伸展。
+    private var resolvedTrackLength: CGFloat? {
+        guard length != "auto" else { return nil }
+        let parsed = UPUnit.parse(length)
+        return parsed > 0 ? parsed : nil
+    }
+
+    private func fill(from lower: Double, to upper: Double, trackLength: CGFloat) -> some View {
+        let start = fillLength(for: lower, trackLength: trackLength)
+        let end = fillLength(for: upper, trackLength: trackLength)
+        return Capsule()
+            .fill(UPColor.parse(activeColor, theme: theme))
+            .frame(width: vertical ? resolvedTrackThickness : Swift.max(end - start, 0),
+                   height: vertical ? Swift.max(end - start, 0) : resolvedTrackThickness)
+            .offset(x: vertical ? 0 : start, y: vertical ? start : 0)
+            .animation(.easeOut(duration: UPConfig.slider.gapAnimationDuration), value: end - start)
+    }
+
+    /// 上游 `__button`：24pt 圆点、`scale(0.9)`、带一层浅阴影，可被 `blockStyle` 覆盖。
+    private func block(for value: Double,
+                       trackLength: CGFloat,
+                       onDrag: @escaping (Double) -> Void) -> some View {
+        Circle()
+            .fill(UPColor.parse(blockColor, theme: theme))
+            .frame(width: CGFloat(blockSize), height: CGFloat(blockSize))
+            .scaleEffect(UPConfig.slider.blockScale)
+            .shadow(color: .black.opacity(0.5),
+                    radius: UPConfig.slider.blockShadowRadius,
+                    y: UPConfig.slider.blockShadowOffsetY)
+            .upStyle(blockStyle)
+            .offset(x: vertical ? 0 : fillLength(for: value, trackLength: trackLength) - CGFloat(blockSize) / 2,
+                    y: vertical ? fillLength(for: value, trackLength: trackLength) - CGFloat(blockSize) / 2 : 0)
+            .gesture(dragGesture(trackLength: trackLength, onDrag: onDrag))
+            .allowsHitTesting(!disabled)
+    }
+
+    /// 上游 `onTouchStart` / `onTouchMove` / `onTouchEnd`：位置按
+    /// `(distance / trackLength) * (max - min) + min` 换算成值。
+    private func dragGesture(trackLength: CGFloat,
+                             onDrag: @escaping (Double) -> Void) -> some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { gesture in
+                guard !disabled else { return }
+                startInteraction()
+                let distance = vertical ? gesture.location.y : gesture.location.x
+                onDrag(value(atDistance: distance, trackLength: trackLength))
+            }
+            .onEnded { _ in
+                guard !disabled else { return }
+                if isRange { endRangeInteraction() } else { endInteraction() }
+            }
+    }
+
+    /// 上游那条换算公式，供单测直接验证。
+    public func value(atDistance distance: CGFloat, trackLength: CGFloat) -> Double {
+        guard trackLength > 0 else { return lowerBound }
+        let ratio = Double(distance / trackLength)
+        return normalize(ratio * (upperBound - lowerBound) + lowerBound)
     }
 
     public func onStart(_ action: @escaping () -> Void) -> Self { var c = self; c.onStartHandler = action; return c }
