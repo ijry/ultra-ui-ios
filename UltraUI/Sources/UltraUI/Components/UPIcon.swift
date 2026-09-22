@@ -22,6 +22,9 @@ public struct UPIcon: View {
     var height: String
     var top: String
     var stop: Bool
+    /// 上游 mixin 提供的 `customStyle`，模板里 `addStyle(customStyle)` 叠在
+    /// 字形 `<text>` 与图片 `<image>` 两个分支上。
+    var customStyle: UPStyle
     var onTap: (() -> Void)?
     var onClick: ((String) -> Void)?
 
@@ -42,6 +45,7 @@ public struct UPIcon: View {
                 height: String = UPConfig.icon.height,
                 top: String = UPConfig.icon.top,
                 stop: Bool = UPConfig.icon.stop,
+                customStyle: UPStyle = UPStyle(),
                 onTap: (() -> Void)? = nil,
                 onClick: ((String) -> Void)? = nil) {
         self.name = name
@@ -61,6 +65,7 @@ public struct UPIcon: View {
         self.height = height
         self.top = top
         self.stop = stop
+        self.customStyle = customStyle
         self.onTap = onTap
         self.onClick = onClick
     }
@@ -74,22 +79,22 @@ public struct UPIcon: View {
         return Group {
             switch position {
             case "left":
-                HStack(spacing: spacing) {
+                HStack(spacing: showsLabel ? spacing : 0) {
                     labelView
                     iconView
                 }
             case "top":
-                VStack(spacing: spacing) {
+                VStack(spacing: showsLabel ? spacing : 0) {
                     labelView
                     iconView
                 }
             case "bottom":
-                VStack(spacing: spacing) {
+                VStack(spacing: showsLabel ? spacing : 0) {
                     iconView
                     labelView
                 }
             default:
-                HStack(spacing: spacing) {
+                HStack(spacing: showsLabel ? spacing : 0) {
                     iconView
                     labelView
                 }
@@ -106,6 +111,12 @@ public struct UPIcon: View {
     public static func isImageName(_ name: String) -> Bool {
         name.contains("/")
     }
+
+    /// 上游模板 `v-if="label !== ''"`。
+    ///
+    /// 照抄上游那句注释里的取舍：判定必须是「严格不等于空串」而不是 `v-if="label"`，
+    /// 否则传数字 0 时 label 也会被当成假值而不显示。
+    public var showsLabel: Bool { label != "" }
 
     /// Resolves unsupported positions to the upstream effective default (`right`).
     public static func normalizedLabelPosition(_ position: String) -> String {
@@ -149,6 +160,7 @@ public struct UPIcon: View {
             .fontWeight(bold ? .bold : .regular)
             .foregroundStyle(UPColor.parse(color, theme: theme))
             .offset(y: UPUnit.parse(top))
+            .upStyle(customStyle)
     }
 
     @ViewBuilder
@@ -166,8 +178,10 @@ public struct UPIcon: View {
                         .frame(width: imageWidth, height: imageHeight)
                 }
             }
+            .upStyle(customStyle)
         } else {
             renderedImage(Image(name), width: imageWidth, height: imageHeight)
+                .upStyle(customStyle)
         }
     }
 
@@ -199,10 +213,13 @@ public struct UPIcon: View {
         return UPUnit.parse(value.isEmpty ? size : value)
     }
 
+    @ViewBuilder
     private var labelView: some View {
-        Text(label)
-            .font(.system(size: UPUnit.parse(labelSize)))
-            .foregroundStyle(UPColor.parse(labelColor, theme: theme))
+        if showsLabel {
+            Text(label)
+                .font(.system(size: UPUnit.parse(labelSize)))
+                .foregroundStyle(UPColor.parse(labelColor, theme: theme))
+        }
     }
 }
 
