@@ -16,7 +16,7 @@ public struct UPToolbar<RightContent: View>: View {
     private var onCancelHandler: (() -> Void)?
 
     public init(
-        show: Bool = true, cancelText: String = "取消", confirmText: String = "确认",
+        show: Bool = true, cancelText: String = "取消", confirmText: String = "确定",
         cancelColor: String = "#909193", confirmColor: String = "", title: String = "",
         rightSlot: Bool = false, @ViewBuilder right: () -> RightContent
     ) {
@@ -66,7 +66,7 @@ public struct UPToolbar<RightContent: View>: View {
 
 public extension UPToolbar where RightContent == EmptyView {
     init(
-        show: Bool = true, cancelText: String = "取消", confirmText: String = "确认",
+        show: Bool = true, cancelText: String = "取消", confirmText: String = "确定",
         cancelColor: String = "#909193", confirmColor: String = "", title: String = "",
         rightSlot: Bool = false
     ) {
