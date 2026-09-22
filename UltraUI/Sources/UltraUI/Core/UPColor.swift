@@ -4,6 +4,11 @@ public enum UPColor {
     public static func parse(_ value: String, theme: UPTheme = .default) -> Color {
         if value.hasPrefix("#") {
             let hex = value.dropFirst()
+            // CSS 简写形式：`#rgb` / `#rgba` 每位复写一次，与展开的 6/8 位等价。
+            if hex.count == 3 || hex.count == 4, hex.allSatisfy(\.isHexDigit) {
+                let expanded = hex.map { String(repeating: String($0), count: 2) }.joined()
+                return parse("#" + expanded, theme: theme)
+            }
             if hex.count == 6, let v = UInt32(hex, radix: 16) {
                 return Color(hex: v)
             }

@@ -30,6 +30,15 @@ final class CoreTests: XCTestCase {
         assertColor(UPColor.parse("#3c9cff80"), Color(red: 0x3c / 255.0, green: 0x9c / 255.0, blue: 0xff / 255.0, opacity: 0x80 / 255.0))
     }
 
+    /// CSS 简写 hex（`#fff`/`#000f`）在上游样式里直接可用，解析后与展开形式等价。
+    func testColorShorthandHex() {
+        assertColor(UPColor.parse("#fff"), .white)
+        assertColor(UPColor.parse("#000"), Color(hex: 0x000000))
+        assertColor(UPColor.parse("#39f"), Color(hex: 0x3399FF))
+        assertColor(UPColor.parse("#39f8"), Color(red: 0x33 / 255.0, green: 0x99 / 255.0, blue: 0xff / 255.0, opacity: 0x88 / 255.0))
+        assertColor(UPColor.parse("#zzz"), UPTheme.default.content)
+    }
+
     func testColorThemeName() {
         assertColor(UPColor.parse("primary"), UPTheme.default.primary)
     }
@@ -51,7 +60,7 @@ final class CoreTests: XCTestCase {
 
     func testConfigDefaults() {
         XCTAssertEqual(UPConfig.button.type, "info")
-        XCTAssertEqual(UPConfig.modal.confirmText, "确认")
+        XCTAssertEqual(UPConfig.modal.confirmText, "确定")
         XCTAssertEqual(UPConfig.popup.mode, "bottom")
         XCTAssertEqual(UPConfig.icon.size, "16px")
     }
