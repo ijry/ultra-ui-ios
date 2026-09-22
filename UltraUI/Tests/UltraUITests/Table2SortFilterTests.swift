@@ -195,4 +195,103 @@ final class Table2SortFilterTests: XCTestCase {
         let table = UPTable2(data: rows, columns: columns)
         XCTAssertEqual(table.sortedData(conditions: []).map(\.id), ["a", "b", "c"])
     }
+
+    /// 上游 `context` 是 Object，原样透传给六个回调。
+    func testTable2PassesContextToCallbacks() {
+        var seen: [String: String] = [:]
+        let table = UPTable2(data: rows, columns: columns, context: ["scene": "demo"])
+            .cellClassName { _, _, context in
+                seen = context
+                return "cell-\(context["scene"] ?? "")"
+            }
+
+        XCTAssertEqual(table.context, ["scene": "demo"])
+        XCTAssertEqual(table.resolvedCellClassName(rows[0], columns[0]), "cell-demo")
+        XCTAssertEqual(seen, ["scene": "demo"])
+    }
+
+    /// 上游 `rowStyle` 支持对象与函数两种形态。
+    func testTable2RowStyleAcceptsObjectAndFunction() {
+        let plain = UPTable2(data: rows, columns: columns)
+        XCTAssertFalse(plain.hasRowStyle)
+        XCTAssertTrue(plain.resolvedRowStyle(UPTableRowScope(row: rows[0])).properties.isEmpty)
+
+        let object = plain.rowStyle(UPStyle(["backgroundColor": "#f5f5f5"]))
+        XCTAssertTrue(object.hasRowStyle)
+        XCTAssertEqual(object.resolvedRowStyle(UPTableRowScope(row: rows[0]))["backgroundColor"], "#f5f5f5")
+
+        let dynamic = plain.rowStyle { scope in
+            UPStyle(["backgroundColor": scope.rowIndex % 2 == 0 ? "#ffffff" : "#fafafa"])
+        }
+        XCTAssertEqual(dynamic.resolvedRowStyle(UPTableRowScope(row: rows[0], rowIndex: 1))["backgroundColor"], "#fafafa")
+    }
+
+    /// 上游 `cellStyleInner`：无列宽走 flex 1，有列宽走 addUnit + flex none，
+    /// 主列额外补 `16 * (level - 1) + 2` 的左内边距，最后并入 `cellStyle` 的返回值。
+    func testTable2CellStyleMergesInnerAndCustom() {
+        let table = UPTable2(data: rows, columns: columns, mainCol: "name")
+        let flexible = table.resolvedCellStyle(UPTableCellScope(row: rows[0], column: columns[1]))
+        XCTAssertEqual(flexible["flex"], "1")
+        XCTAssertEqual(flexible["width"], "auto")
+
+        let sized = UPTableColumn(key: "score", title: "分数", width: "120")
+        let fixed = table.resolvedCellStyle(UPTableCellScope(row: rows[0], column: sized))
+        XCTAssertEqual(fixed["flex"], "none")
+        XCTAssertEqual(fixed["width"], "120px")
+
+        let indented = table.resolvedCellStyle(
+            UPTableCellScope(row: rows[0], column: columns[0], level: 3)
+        )
+        XCTAssertEqual(indented["paddingLeft"], "34px")
+
+        let custom = table.cellStyle { _ in UPStyle(["color": "#fa3534", "flex": "2"]) }
+        let merged = custom.resolvedCellStyle(UPTableCellScope(row: rows[0], column: columns[1]))
+        XCTAssertTrue(custom.hasCellStyle)
+        XCTAssertEqual(merged["color"], "#fa3534")
+        // cellStyle 的返回值覆盖 cellStyleInner 先算的同名键。
+        XCTAssertEqual(merged["flex"], "2")
+    }
+
+    /// 上游 `getCellSpan` / `getCellSpanClass` / `getCellSpanStyle`。
+    func testTable2SpanMethodDrivesClassAndStyle() {
+        let table = UPTable2(data: rows, columns: columns, rowHeight: "36px")
+        let scope = UPTableCellScope(row: rows[0], column: columns[0])
+        XCTAssertFalse(table.hasSpanMethod)
+        XCTAssertEqual(table.cellSpan(scope), UPTableCellSpan(rowspan: 1, colspan: 1))
+        XCTAssertEqual(table.cellSpanClass(scope), "")
+
+        let merged = table.spanMethod { _ in UPTableCellSpan(rowspan: 2, colspan: 3) }
+        XCTAssertTrue(merged.hasSpanMethod)
+        XCTAssertEqual(merged.cellSpanClass(scope), "u-table-cell-merged")
+        let mergedStyle = merged.cellSpanStyle(scope)
+        XCTAssertEqual(mergedStyle["height"], "72px")
+        XCTAssertEqual(mergedStyle["flex"], "3")
+
+        let hidden = table.spanMethod { _ in UPTableCellSpan(rowspan: 0, colspan: 0) }
+        XCTAssertEqual(hidden.cellSpanClass(scope), "u-table-cell-hidden")
+        XCTAssertEqual(hidden.cellSpanStyle(scope)["display"], "none")
+
+        // 上游返回非数组非对象时兜底 1×1。
+        let fallback = table.spanMethod { _ in nil }
+        XCTAssertEqual(fallback.cellSpan(scope), UPTableCellSpan(rowspan: 1, colspan: 1))
+    }
+
+    /// 上游模板里三个 className 回调都是「给了才调用，否则空串」。
+    func testTable2ClassNameCallbacksDefaultToEmpty() {
+        let plain = UPTable2(data: rows, columns: columns)
+        XCTAssertFalse(plain.hasCellClassName)
+        XCTAssertFalse(plain.hasHeaderCellClassName)
+        XCTAssertFalse(plain.hasRowClassName)
+        XCTAssertEqual(plain.resolvedCellClassName(rows[0], columns[0]), "")
+        XCTAssertEqual(plain.resolvedHeaderCellClassName(columns[0]), "")
+        XCTAssertEqual(plain.resolvedRowClassName(rows[0], rowIndex: 0), "")
+
+        let styled = plain
+            .headerCellClassName { column, _ in "header-\(column.key)" }
+            .rowClassName { _, rowIndex, _ in rowIndex == 0 ? "first" : "rest" }
+        XCTAssertTrue(styled.hasHeaderCellClassName)
+        XCTAssertTrue(styled.hasRowClassName)
+        XCTAssertEqual(styled.resolvedHeaderCellClassName(columns[0]), "header-name")
+        XCTAssertEqual(styled.resolvedRowClassName(rows[1], rowIndex: 1), "rest")
+    }
 }

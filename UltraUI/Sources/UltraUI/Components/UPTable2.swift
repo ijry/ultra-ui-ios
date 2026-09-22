@@ -142,6 +142,66 @@ public struct UPTableSortCondition: Equatable, Sendable {
     }
 }
 
+/// 上游 `spanMethod` 的返回值。
+///
+/// 上游允许返回数组 `[rowspan, colspan]` 或对象 `{ rowspan, colspan }`，
+/// 两条分支都把 `null` 补成 1；没返回值时兜底 `{ rowspan: 1, colspan: 1 }`。
+public struct UPTableCellSpan: Equatable, Sendable {
+    public var rowspan: Int
+    public var colspan: Int
+
+    public init(rowspan: Int = 1, colspan: Int = 1) {
+        self.rowspan = rowspan
+        self.colspan = colspan
+    }
+}
+
+/// 上游 `cellStyleInner(scope)` 与 `spanMethod(scope)` 的入参。
+public struct UPTableCellScope: Equatable, Sendable {
+    public var row: UPTableRow
+    public var column: UPTableColumn
+    public var rowIndex: Int
+    public var columnIndex: Int
+    public var level: Int
+    /// 上游 `context`：调用方自带的上下文对象，原样透传给各个回调。
+    public var context: [String: String]
+
+    public init(row: UPTableRow,
+                column: UPTableColumn,
+                rowIndex: Int = 0,
+                columnIndex: Int = 0,
+                level: Int = 1,
+                context: [String: String] = [:]) {
+        self.row = row
+        self.column = column
+        self.rowIndex = rowIndex
+        self.columnIndex = columnIndex
+        self.level = level
+        self.context = context
+    }
+}
+
+/// 上游 `getRowStyle(row, rowIndex, level, parentRow)` 的入参。
+public struct UPTableRowScope: Equatable, Sendable {
+    public var row: UPTableRow
+    public var rowIndex: Int
+    public var level: Int
+    public var parentRow: UPTableRow?
+    public var context: [String: String]
+
+    public init(row: UPTableRow,
+                rowIndex: Int = 0,
+                level: Int = 1,
+                parentRow: UPTableRow? = nil,
+                context: [String: String] = [:]) {
+        self.row = row
+        self.rowIndex = rowIndex
+        self.level = level
+        self.parentRow = parentRow
+        self.context = context
+    }
+}
+
 public struct UPFlattenedTableRow: Equatable, Sendable {
     public let row: UPTableRow
     /// 上游 `level` 从 1 起算，缩进公式 `16 * (level - 1) + 2`。
@@ -206,6 +266,10 @@ public struct UPTable2: View {
     public var expandWidth: String
     public var rowHeight: String
     public var showOverflowTooltip: Bool
+    /// 上游 `context`：调用方自带的上下文对象，原样透传给 `rowStyle` / `cellStyle` /
+    /// `cellClassName` / `headerCellClassName` / `rowClassName` / `spanMethod`。
+    /// 上游类型是 `Object`，原生收敛成字符串字典。
+    public var context: [String: String]
 
     /// 现有原生简写，保留作源兼容。
     public var expandedKeys: Set<String>
@@ -213,6 +277,13 @@ public struct UPTable2: View {
     public var currentRow: String
 
     private var selectedBinding: Binding<Set<String>>?
+    private var rowStyleObject: UPStyle?
+    private var rowStyleHandler: ((UPTableRowScope) -> UPStyle)?
+    private var cellStyleHandler: ((UPTableCellScope) -> UPStyle)?
+    private var cellClassNameHandler: ((UPTableRow, UPTableColumn, [String: String]) -> String)?
+    private var headerCellClassNameHandler: ((UPTableColumn, [String: String]) -> String)?
+    private var rowClassNameHandler: ((UPTableRow, Int, [String: String]) -> String)?
+    private var spanMethodHandler: ((UPTableCellScope) -> UPTableCellSpan?)?
     private var sortMethodHandler: (@Sendable (UPTableRow, UPTableRow, String) -> Int)?
     private var loadHandler: ((UPTableRow, UPTableTreeNode, @escaping ([UPTableRow]) -> Void) -> Void)?
     private var onRowClickHandler: ((UPTableRow) -> Void)?
@@ -247,6 +318,7 @@ public struct UPTable2: View {
                 expandWidth: String = "25px",
                 rowHeight: String = "36px",
                 showOverflowTooltip: Bool = false,
+                context: [String: String] = [:],
                 expandedKeys: Set<String> = [],
                 selectedKeys: Binding<Set<String>>? = nil,
                 currentRow: String = "") {
@@ -274,6 +346,7 @@ public struct UPTable2: View {
         self.expandWidth = expandWidth
         self.rowHeight = rowHeight
         self.showOverflowTooltip = showOverflowTooltip
+        self.context = context
         self.expandedKeys = expandedKeys
         self.selectedKeys = selectedKeys?.wrappedValue ?? []
         self.selectedBinding = selectedKeys
@@ -599,11 +672,9 @@ public struct UPTable2: View {
     public var body: some View {
         ScrollView([.horizontal, .vertical]) {
             VStack(spacing: 0) {
-                if showHeader { rowView(columns.map(\.title), header: true) }
-                ForEach(flattenedRows(expandedKeys: expandedKeys), id: \.row.id) { item in
-                    rowView(columns.map { item.row[$0.key] }, header: false)
-                        // 上游缩进公式，level 从 1 起算。
-                        .padding(.leading, CGFloat(16 * max(0, item.level - 1) + 2))
+                if showHeader { headerRow }
+                ForEach(Array(flattenedRows(expandedKeys: expandedKeys).enumerated()), id: \.element.row.id) { offset, item in
+                    bodyRow(item, offset: offset)
                 }
                 // 上游判空用原始 data，过滤后为空时不显示 emptyText。
                 if showsEmptyText {
@@ -627,26 +698,66 @@ public struct UPTable2: View {
         return parsed > 0 ? parsed : .infinity
     }
 
-    @ViewBuilder
-    private func rowView(_ values: [String], header: Bool) -> some View {
+    /// 上游表头：每个单元格都过一遍 `headerCellClassName(col, context)`。
+    private var headerRow: some View {
         HStack(spacing: 0) {
-            ForEach(Array(values.enumerated()), id: \.offset) { index, value in
-                Text(value)
-                    .frame(
-                        minWidth: columns.indices.contains(index) && !columns[index].width.isEmpty
-                            ? UPUnit.parse(columns[index].width)
-                            : 100,
-                        alignment: .leading
-                    )
+            ForEach(Array(columns.enumerated()), id: \.offset) { index, column in
+                Text(column.title)
+                    .frame(minWidth: cellMinWidth(at: index), alignment: .leading)
                     .padding(8)
-                    .background(
-                        stripe && !header && index % 2 == 0
-                            ? Color.gray.opacity(0.05)
-                            : .clear
-                    )
+                    .upStyle(headerCellStyle(column))
             }
         }
-        .font(.system(size: 14, weight: header ? .semibold : .regular))
+        .font(.system(size: 14, weight: .semibold))
+    }
+
+    /// 上游行：`rowClassName` / `rowStyle` 作用在行上，`cellStyleInner` 与
+    /// `getCellSpanStyle` 叠在单元格上。
+    private func bodyRow(_ item: UPFlattenedTableRow, offset: Int) -> some View {
+        let rowScope = UPTableRowScope(row: item.row,
+                                       rowIndex: item.rowIndex,
+                                       level: item.level,
+                                       parentRow: item.parentRow,
+                                       context: context)
+        return HStack(spacing: 0) {
+            ForEach(Array(columns.enumerated()), id: \.offset) { index, column in
+                bodyCell(item, column: column, columnIndex: index)
+            }
+        }
+        .font(.system(size: 14))
+        .background(stripe && offset % 2 == 1 ? Color.gray.opacity(0.05) : .clear)
+        .upStyle(resolvedRowStyle(rowScope))
+    }
+
+    private func bodyCell(_ item: UPFlattenedTableRow,
+                          column: UPTableColumn,
+                          columnIndex: Int) -> some View {
+        let scope = UPTableCellScope(row: item.row,
+                                     column: column,
+                                     rowIndex: item.rowIndex,
+                                     columnIndex: columnIndex,
+                                     level: item.level,
+                                     context: context)
+        return Text(item.row[column.key])
+            .frame(minWidth: cellMinWidth(at: columnIndex), alignment: .leading)
+            .padding(8)
+            .upStyle(resolvedCellStyle(scope))
+            .upStyle(cellSpanStyle(scope))
+            // 上游 `.u-table-cell-hidden { opacity: 0 }`。
+            .opacity(cellSpanClass(scope) == "u-table-cell-hidden" ? 0 : 1)
+    }
+
+    private func cellMinWidth(at index: Int) -> CGFloat {
+        guard columns.indices.contains(index), !columns[index].width.isEmpty else { return 100 }
+        return UPUnit.parse(columns[index].width)
+    }
+
+    /// 上游表头单元格只吃列宽。`headerCellClassName` 返回的是 class 而不是 style，
+    /// 原生没有 class 体系，class 值由 `resolvedHeaderCellClassName` 暴露给调用方。
+    private func headerCellStyle(_ column: UPTableColumn) -> UPStyle {
+        column.width.isEmpty
+            ? UPStyle(["flex": "1", "width": "auto"])
+            : UPStyle(["flex": "none", "width": UPTable2.addUnit(column.width)])
     }
 
     // MARK: 树形
@@ -763,5 +874,155 @@ public struct UPTable2: View {
         let next = nextSortConditions(conditions, column: column)
         onSortChangeHandler?(next)
         return next
+    }
+
+    // MARK: - 行/单元格样式与合并
+
+    /// 上游 `rowStyle` 的对象形态：直接给一份固定样式。
+    public func rowStyle(_ style: UPStyle) -> Self {
+        var copy = self
+        copy.rowStyleObject = style
+        copy.rowStyleHandler = nil
+        return copy
+    }
+
+    /// 上游 `rowStyle` 的函数形态：入参 `{ row, rowIndex, level, parentRow, context }`。
+    public func rowStyle(_ handler: @escaping (UPTableRowScope) -> UPStyle) -> Self {
+        var copy = self
+        copy.rowStyleHandler = handler
+        copy.rowStyleObject = nil
+        return copy
+    }
+
+    /// 上游 `cellStyle`：入参 `{ row, column, rowIndex, columnIndex, level, context }`，
+    /// 返回值会覆盖 `cellStyleInner` 先算出的宽度与缩进。
+    public func cellStyle(_ handler: @escaping (UPTableCellScope) -> UPStyle) -> Self {
+        var copy = self
+        copy.cellStyleHandler = handler
+        return copy
+    }
+
+    /// 上游 `cellClassName(row, col, context)`。
+    public func cellClassName(_ handler: @escaping (UPTableRow, UPTableColumn, [String: String]) -> String) -> Self {
+        var copy = self
+        copy.cellClassNameHandler = handler
+        return copy
+    }
+
+    /// 上游 `headerCellClassName(col, context)`。
+    public func headerCellClassName(_ handler: @escaping (UPTableColumn, [String: String]) -> String) -> Self {
+        var copy = self
+        copy.headerCellClassNameHandler = handler
+        return copy
+    }
+
+    /// 上游 `rowClassName(row, rowIndex, context)`。
+    public func rowClassName(_ handler: @escaping (UPTableRow, Int, [String: String]) -> String) -> Self {
+        var copy = self
+        copy.rowClassNameHandler = handler
+        return copy
+    }
+
+    /// 上游 `spanMethod`：返回 nil 等价于上游返回非数组非对象，兜底 1×1。
+    ///
+    /// 以 `u-table2.vue` 的 `getCellSpan` 为准。`tableRow.vue` 里同名方法的对象分支
+    /// 引用了未声明的裸 `rowspan` / `colspan`（ReferenceError），是上游硬 bug，不移植。
+    public func spanMethod(_ handler: @escaping (UPTableCellScope) -> UPTableCellSpan?) -> Self {
+        var copy = self
+        copy.spanMethodHandler = handler
+        return copy
+    }
+
+    public var hasRowStyle: Bool { rowStyleHandler != nil || rowStyleObject != nil }
+    public var hasCellStyle: Bool { cellStyleHandler != nil }
+    public var hasCellClassName: Bool { cellClassNameHandler != nil }
+    public var hasHeaderCellClassName: Bool { headerCellClassNameHandler != nil }
+    public var hasRowClassName: Bool { rowClassNameHandler != nil }
+    public var hasSpanMethod: Bool { spanMethodHandler != nil }
+
+    /// 上游 `getRowStyle`：函数形态调用后取 `|| {}`，对象形态直接返回。
+    public func resolvedRowStyle(_ scope: UPTableRowScope) -> UPStyle {
+        if let rowStyleHandler {
+            var scoped = scope
+            if scoped.context.isEmpty { scoped.context = context }
+            return rowStyleHandler(scoped)
+        }
+        return rowStyleObject ?? UPStyle()
+    }
+
+    /// 上游 `cellStyleInner(scope)`：先按列宽算 `width` / `flex`，主列再补缩进，
+    /// 最后把 `cellStyle` 的返回值合并进来（同名键覆盖）。
+    public func resolvedCellStyle(_ scope: UPTableCellScope) -> UPStyle {
+        var properties: [String: String] = [:]
+        if scope.column.width.isEmpty {
+            properties["flex"] = "1"
+            properties["width"] = "auto"
+        } else {
+            properties["flex"] = "none"
+            properties["width"] = UPTable2.addUnit(scope.column.width)
+        }
+        // 上游只给展开列加 padding：`16 * (level - 1) + 2`。
+        if scope.column.key == computedMainCol {
+            properties["paddingLeft"] = "\(16 * (scope.level - 1) + 2)px"
+        }
+        if let cellStyleHandler {
+            var scoped = scope
+            if scoped.context.isEmpty { scoped.context = context }
+            for (key, value) in cellStyleHandler(scoped).properties {
+                properties[key] = value
+            }
+        }
+        return UPStyle(properties)
+    }
+
+    /// 上游 `getCellSpan`：没给 `spanMethod` 或返回值不可用时都是 1×1。
+    public func cellSpan(_ scope: UPTableCellScope) -> UPTableCellSpan {
+        guard let spanMethodHandler else { return UPTableCellSpan() }
+        var scoped = scope
+        if scoped.context.isEmpty { scoped.context = context }
+        guard let result = spanMethodHandler(scoped) else { return UPTableCellSpan() }
+        return result
+    }
+
+    /// 上游 `getCellSpanClass`：0 是 hidden，>1 是 merged，其余空串。
+    public func cellSpanClass(_ scope: UPTableCellScope) -> String {
+        let span = cellSpan(scope)
+        if span.rowspan == 0 || span.colspan == 0 { return "u-table-cell-hidden" }
+        if span.rowspan > 1 || span.colspan > 1 { return "u-table-cell-merged" }
+        return ""
+    }
+
+    /// 上游 `getCellSpanStyle`：rowspan 折算高度、colspan 折算 flex、任一为 0 则 display none。
+    public func cellSpanStyle(_ scope: UPTableCellScope) -> UPStyle {
+        let span = cellSpan(scope)
+        var properties: [String: String] = [:]
+        if span.rowspan > 1 {
+            // 上游用 parseInt(rowHeight)，"36px" → 36。
+            let height = Int(UPUnit.parse(rowHeight))
+            if height > 0 { properties["height"] = "\(span.rowspan * height)px" }
+        }
+        if span.colspan > 1 { properties["flex"] = "\(span.colspan)" }
+        if span.rowspan == 0 || span.colspan == 0 { properties["display"] = "none" }
+        return UPStyle(properties)
+    }
+
+    /// 上游模板 `cellClassName ? cellClassName(row, col, context) : ''`。
+    public func resolvedCellClassName(_ row: UPTableRow, _ column: UPTableColumn) -> String {
+        cellClassNameHandler?(row, column, context) ?? ""
+    }
+
+    /// 上游模板 `headerCellClassName ? headerCellClassName(col, context) : ''`。
+    public func resolvedHeaderCellClassName(_ column: UPTableColumn) -> String {
+        headerCellClassNameHandler?(column, context) ?? ""
+    }
+
+    /// 上游模板 `rowClassName ? rowClassName(row, rowIndex, context) : ''`。
+    public func resolvedRowClassName(_ row: UPTableRow, rowIndex: Int) -> String {
+        rowClassNameHandler?(row, rowIndex, context) ?? ""
+    }
+
+    /// 上游 `addUnit`：能当数值解析的补 px，否则原样返回。
+    nonisolated static func addUnit(_ value: String, unit: String = "px") -> String {
+        Double(value) != nil ? value + unit : value
     }
 }
