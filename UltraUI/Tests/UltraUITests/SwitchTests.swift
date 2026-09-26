@@ -28,6 +28,22 @@ final class SwitchTests: XCTestCase {
         XCTAssertEqual(toggle.resolvedNodeSize, 25)
     }
 
+    /// 上游 `switchStyle.borderColor`：默认（白底、未激活、未自定义）显示边框
+    /// （暗 #4b5563 / 亮 rgba(0,0,0,0.12)）；自定义 inactiveColor 或激活时透明。
+    func testResolvedBorderColorMatchesUpstream() {
+        let def = UPSwitch()
+        XCTAssertEqual(def.resolvedBorderColorValue(isDark: false), "rgba(0, 0, 0, 0.12)")
+        XCTAssertEqual(def.resolvedBorderColorValue(isDark: true), "#4b5563")
+
+        // 激活态透明。
+        let on = UPSwitch(value: true)
+        XCTAssertEqual(on.resolvedBorderColorValue(isDark: false), "transparent")
+
+        // 自定义 inactiveColor 透明。
+        let custom = UPSwitch(inactiveColor: "#dddddd")
+        XCTAssertEqual(custom.resolvedBorderColorValue(isDark: false), "transparent")
+    }
+
     func testBindingSupportsBooleanStringAndNumberValuesWithStrictIdentity() {
         let boolBox = SwitchValueBox(false)
         let stringBox = SwitchValueBox("off")

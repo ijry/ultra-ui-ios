@@ -369,10 +369,15 @@ public struct UPSwitch: View {
         isActive ? resolvedActiveDotColor : resolvedInactiveDotColor
     }
 
+    /// 上游 `switchStyle.borderColor`：自定义 inactiveColor 或激活时透明；否则
+    /// `--up-switch-border-color`（暗 #4b5563 / 亮 rgba(0,0,0,0.12)）。
+    public func resolvedBorderColorValue(isDark: Bool) -> String {
+        if isCustomInactiveColor || isActive { return "transparent" }
+        return isDark ? "#4b5563" : "rgba(0, 0, 0, 0.12)"
+    }
+
     private var resolvedBorderColor: Color {
-        isCustomInactiveColor || isActive
-            ? .clear
-            : Color.black.opacity(colorScheme == .dark ? 0.28 : 0.12)
+        UPColor.parse(resolvedBorderColorValue(isDark: colorScheme == .dark), theme: theme)
     }
 
     private var switchControl: some View {
