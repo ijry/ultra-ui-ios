@@ -23,6 +23,12 @@ final class TabsTests: XCTestCase {
         XCTAssertEqual(events, [UPTabsEvent(item: tabs.list[1], index: 1)])
     }
 
+    /// 上游指示条默认背景 `var(--up-primary, #3c9cff)`：lineColor 为空回落 primary。
+    func testTabsResolvedLineColor() {
+        XCTAssertEqual(UPTabs(list: ["A", "B"]).resolvedLineColorValue(), "#3c9cff")
+        XCTAssertEqual(UPTabs(list: ["A", "B"], lineColor: "#ff0000").resolvedLineColorValue(), "#ff0000")
+    }
+
     func testDisabledTabStillClicksButDoesNotChange() {
         let current = NavigationIntBox(0)
         var clicked: [Int] = []

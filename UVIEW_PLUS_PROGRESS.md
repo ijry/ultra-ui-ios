@@ -161,7 +161,7 @@
 | 118 | `u-tabbar-item` | `UPTabbarItem` | ✅ 已完成 | 中高 | tabbar 子项、badge、active/inactive icon、事件 payload |
 | 119 | `u-table` | `UPTable` | ✅ 已完成 | 中高 | 7 个上游 props 与默认值已覆盖；改由 `UPTableStyleContext` 经 Environment 下发父表样式，替代上游 `$parent` 查找（`9db5229`） |
 | 120 | `u-table2` | `UPTable2` | ✅ 已完成 | 属性/事件对齐 | 31 个 props、6 个真实事件载荷、排序三态轮转/multiSort/sortBy/sortMethod、filters 子串匹配、选择向下级联、树形展开与懒加载、左固定列与空数据已覆盖；本轮补齐 `context` 与 `rowStyle`/`cellStyle`/`cellClassName`/`headerCellClassName`/`rowClassName`/`spanMethod` 六个回调（className 类回调只算值、样式走 style）；上游 5 个死声明事件不建模、`declaredButNeverEmittedEventNames` 记录 |
-| 121 | `u-tabs` | `UPTabs` | 🔄 兼容增强中 | 中高 | 支持 String 列表/Int Binding、无控选中状态、disabled/click/change、滚动指示器；与 tabs-item 配套。未提交修复：`init(list:current: Int)` 原先只写公开属性、漏写无控状态盒，`selectedIndex` 恒为 0，现已同步并补 3 个回归测试 |
+| 121 | `u-tabs` | `UPTabs` | ✅ 已完成 | 属性/事件对齐 | String 列表/Int Binding、无控选中（`init(list:current:Int)` 已同步无控状态盒）、disabled/click/change、滚动指示器、与 tabs-item 配套已覆盖。本轮：指示条默认色对齐上游 `var(--up-primary,#3c9cff)`（新增 `resolvedLineColorValue()`），tab 图标改用 `UPIcon`(+iconStyle) 替代 SF Symbols |
 | 122 | `u-tabs-item` | `UPTabsItem` | ✅ 已完成 | 中高 | name/badge/icon/disabled 元数据与父子选择上下文已覆盖 |
 | 123 | `u-tag` | `UPTag` | ✅ 已完成 | 高 | props、click/close payload、图标及内容插槽已覆盖 |
 | 124 | `u-td` | `UPTd` | ✅ 已完成 | 中高 | 先继承父表 align/padding/fontSize/color/borderColor，再由非空自身 props 覆盖；`width != "auto"` 才固定列宽；padding 无单元格级 prop 故始终继承（`9db5229`） |

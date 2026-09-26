@@ -120,6 +120,9 @@ public struct UPTabs: View {
         self.uncontrolledState.index = current
     }
 
+    /// 上游指示条默认背景 `var(--up-primary, #3c9cff)`：lineColor 为空回落 primary。
+    public func resolvedLineColorValue() -> String { lineColor.isEmpty ? "#3c9cff" : lineColor }
+
     public var body: some View {
         Group {
             if scrollable {
@@ -136,12 +139,12 @@ public struct UPTabs: View {
                 Button { select(index) } label: {
                     VStack(spacing: 5) {
                         HStack(spacing: 4) {
-                            if !item.icon.isEmpty { Image(systemName: item.icon) }
+                            if !item.icon.isEmpty { UPIcon(name: item.icon, size: "15px").upStyle(iconStyle) }
                             Text(item.name)
                             if !item.badge.isEmpty { Text(item.badge).font(.caption2) }
                         }
                         Capsule()
-                            .fill(index == selectedIndex ? UPColor.parse(lineColor.isEmpty ? "#3c9cff" : lineColor) : .clear)
+                            .fill(index == selectedIndex ? UPColor.parse(resolvedLineColorValue()) : .clear)
                             .frame(width: lineWidth, height: lineHeight)
                     }
                     .frame(maxWidth: scrollable ? nil : .infinity)
