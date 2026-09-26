@@ -1,20 +1,20 @@
 # uview-plus SwiftUI 复刻进度
 
-> 最后更新：2026-09-04
+> 最后更新：2026-09-26
 > 上游基线：uview-plus `3.8.113`，以 `components/u-*` 目录为完整清单
-> iOS 基线：`main` / `269d9e6`
+> iOS 基线：`main` / `e5433f0`
 
 ## 总览
 
 | 指标 | 数量 | 说明 |
 | --- | ---: | --- |
 | 上游组件目录 | 140 | 包括公开组件、配套子组件和内部辅助组件 |
-| 已完成 | 120 | 已提交，具备对应 SwiftUI 类型和测试基线 |
-| 兼容增强中 | 18 | `u-tabs`、`u-car-keyboard`、`u-number-keyboard`、`u-modal`、`u-picker`、`u-datetime-picker`、`u-toolbar`、`u-read-more`、`u-no-network`、`u-city-locate`、`u-swipe-action`、`u-swipe-action-item`、`u-guide`、`u-keyboard`、`u-index-anchor`、`u-index-list`、`u-pdf-reader`、`u-notify` 已有提交基线，行为/文案修复尚未提交 |
-| 开发中 | 2 | `u-novel-reader`、`u-tabs-pro` 实现与测试已 GREEN，尚未提交 |
+| 已完成 | 122 | 已提交，具备对应 SwiftUI 类型和测试基线 |
+| 兼容增强中 | 18 | `u-car-keyboard`、`u-number-keyboard`、`u-modal`、`u-picker`、`u-datetime-picker`、`u-toolbar`、`u-read-more`、`u-no-network`、`u-city-locate`、`u-swipe-action`、`u-swipe-action-item`、`u-guide`、`u-keyboard`、`u-index-anchor`、`u-index-list`、`u-pdf-reader`、`u-notify`、`u-popover` 已有提交基线，行为/文案修复尚未提交 |
+| 开发中 | 0 | （原 `u-novel-reader`、`u-tabs-pro` 已提交，计入已完成） |
 | 待开始 | 0 | 140 个上游目录均有对应 SwiftUI 类型 |
 | 已有实现覆盖 | 140 / 140 | `已完成 + 兼容增强中 + 开发中`，100% |
-| 已提交覆盖 | 138 / 140 | `已完成 + 兼容增强中` 均已有已提交基线，约 98.6% |
+| 已提交覆盖 | 140 / 140 | 140 个上游目录均已提交 SwiftUI 实现与测试基线，100% |
 
 ## 状态口径
 
@@ -179,8 +179,8 @@
 | 136 | `u-view` | `UPView` | ✅ 已完成 | 基线可用 | 上游通用 View 包装组件 |
 | 137 | `u-virtual-list` | `UPVirtualList` | ✅ 已完成 | 属性/事件对齐 | 6 个 prop 与 `update:scrollTop`/`scroll` 全覆盖，remain/visibleCount/buffer 区间算法照抄上游；`keyField` 因无法反射取字段改为 `key` 闭包 |
 | 138 | `u-waterfall` | `UPWaterfall` | ✅ 已完成 | 属性/事件对齐 | 瀑布流布局与数据更新 |
-| 139 | `u-novel-reader` | `UPNovelReader` | 🚧 开发中 | 基线可用 | 章节/翻页/滚动双模式、分页布局计算、进度与书签持久化、阅读时长、目录与设置弹层已覆盖（51 tests）；实现与测试已 GREEN 但尚未提交 |
-| 140 | `u-tabs-pro` | `UPTabsPro` | 🚧 开发中 | 中高 | 包一层 `UPTabs`：current 归一化、内容区插槽上下文、list 变化回写、空 `activeStyle` 覆盖子组件默认值、单次点击重复 emit 两遍 `update:current` 均已照抄（28 tests）；`contentMode`/`bindIndexRef` 为上游死 prop，仅作元数据；实现与测试已 GREEN 但尚未提交 |
+| 139 | `u-novel-reader` | `UPNovelReader` | ✅ 已完成 | 基线可用 | 章节/翻页/滚动双模式、分页布局计算、进度与书签持久化、阅读时长、目录与设置弹层已覆盖（51 tests）；实现与测试已提交 |
+| 140 | `u-tabs-pro` | `UPTabsPro` | ✅ 已完成 | 中高 | 包一层 `UPTabs`：current 归一化、内容区插槽上下文、list 变化回写、空 `activeStyle` 覆盖子组件默认值、单次点击重复 emit 两遍 `update:current` 均已照抄（28 tests）；`contentMode`/`bindIndexRef` 为上游死 prop，仅作元数据；实现与测试已提交 |
 
 序号说明：1..138 严格按上游 `components/u-*` 的字母序排列；`3.8.113` 新增的 `u-novel-reader`、`u-tabs-pro` 追加在表尾（字母序位置分别在 76/77 与 122 之后），以避免整表重编号。下次上游升级重新扫描时可一并归位。
 
