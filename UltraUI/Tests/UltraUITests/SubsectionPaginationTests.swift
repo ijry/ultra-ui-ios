@@ -44,6 +44,54 @@ final class SubsectionPaginationTests: XCTestCase {
         XCTAssertEqual(change, UPSubsectionChange(index: 1, item: items[1]))
     }
 
+    /// 上游 `resolvedInactiveColor`/`resolvedButtonBgColor`/`resolvedButtonBarColor`
+    /// 等：未显式传色时按主题回落（亮/暗不同），显式传色则原样用。
+    func testSubsectionResolvedThemeColors() {
+        let def = UPSubsection(list: ["A", "B"])
+        XCTAssertEqual(def.resolvedInactiveColorValue(isDark: false), "#303133")
+        XCTAssertEqual(def.resolvedInactiveColorValue(isDark: true), "#d1d5db")
+        XCTAssertEqual(def.resolvedButtonBgColorValue(isDark: false), "#eeeeef")
+        XCTAssertEqual(def.resolvedButtonBgColorValue(isDark: true), "#2b2c30")
+        XCTAssertEqual(def.resolvedButtonBarColorValue(isDark: false), "#ffffff")
+        XCTAssertEqual(def.resolvedButtonBarColorValue(isDark: true), "#3a3b40")
+
+        let custom = UPSubsection(list: ["A", "B"], inactiveColor: "#111111", bgColor: "#222222")
+        XCTAssertEqual(custom.resolvedInactiveColorValue(isDark: true), "#111111")
+        XCTAssertEqual(custom.resolvedButtonBgColorValue(isDark: true), "#222222")
+    }
+
+    /// 上游禁用态：bar/文字/边框走专用回落色。
+    func testSubsectionDisabledColors() {
+        let d = UPSubsection(list: ["A", "B"], disabled: true)
+        XCTAssertEqual(d.resolvedButtonBarColorValue(isDark: false), "#f5f5f5")
+        XCTAssertEqual(d.resolvedButtonBarColorValue(isDark: true), "#3a3a3c")
+        XCTAssertEqual(d.resolvedDisabledTextColorValue(isDark: false), "#c8c9cc")
+        XCTAssertEqual(d.resolvedDisabledTextColorValue(isDark: true), "#6b7280")
+        XCTAssertEqual(d.resolvedDisabledBorderColorValue(isDark: false), "#d4d4d4")
+        XCTAssertEqual(d.resolvedDisabledBorderColorValue(isDark: true), "#3a3a3c")
+        // 禁用时文字统一走 disabled 文字色。
+        XCTAssertEqual(d.textColorValue(index: 0, isDark: false), "#c8c9cc")
+    }
+
+    /// 上游 `textStyle`：subsection 模式激活文字为白，button 模式激活文字为 activeColor；
+    /// 未激活走 resolvedInactiveColor；item 级键名覆盖优先。
+    func testSubsectionTextColorFollowsMode() {
+        let subMode = UPSubsection(list: ["A", "B"], current: 0, mode: "subsection")
+        XCTAssertEqual(subMode.textColorValue(index: 0, isDark: false), "#ffffff")
+        XCTAssertEqual(subMode.textColorValue(index: 1, isDark: false), "#303133")
+
+        let buttonMode = UPSubsection(list: ["A", "B"], current: 0, mode: "button")
+        XCTAssertEqual(buttonMode.textColorValue(index: 0, isDark: false), "#3c9cff")
+        XCTAssertEqual(buttonMode.textColorValue(index: 1, isDark: false), "#303133")
+
+        let overridden = UPSubsection(
+            list: [UPSubsectionItem(name: "A", activeColorKey: "#ff0000", inactiveColorKey: "#00ff00"),
+                   UPSubsectionItem(name: "B")],
+            current: 0, mode: "subsection")
+        XCTAssertEqual(overridden.textColorValue(index: 0, isDark: false), "#ff0000")
+        XCTAssertEqual(overridden.textColorValue(index: 1, isDark: false), "#303133")
+    }
+
     func testSubsectionAcceptsUncontrolledCurrentProp() {
         let subsection = UPSubsection(list: ["A", "B"], current: 1)
 

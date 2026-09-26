@@ -119,6 +119,18 @@ final class PopupTests: XCTestCase {
         XCTAssertTrue(popup.hasBottomSlot)
     }
 
+    /// 上游按 mode 只圆化背离屏幕边缘的两个角：bottom→上两角、top→下两角、
+    /// left→右两角、right→左两角、center→四角。
+    func testPopupRoundedCornersFollowMode() {
+        XCTAssertEqual(UPRectCorner.forPopup(mode: "bottom"), [.topLeft, .topRight])
+        XCTAssertEqual(UPRectCorner.forPopup(mode: "top"), [.bottomLeft, .bottomRight])
+        XCTAssertEqual(UPRectCorner.forPopup(mode: "left"), [.topRight, .bottomRight])
+        XCTAssertEqual(UPRectCorner.forPopup(mode: "right"), [.topLeft, .bottomLeft])
+        XCTAssertEqual(UPRectCorner.forPopup(mode: "center"), .all)
+        // 未知 mode 回落 center 语义（全圆角）。
+        XCTAssertEqual(UPRectCorner.forPopup(mode: "weird"), .all)
+    }
+
     func testStringAndNumberPropsAreNormalizedLikeUpstreamValues() {
         let popup = UPPopup(
             show: .constant(true),

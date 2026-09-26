@@ -157,16 +157,49 @@ public struct UPTabbar: View {
         self.uncontrolledState.value = value
     }
 
+    // MARK: - 主题回落色（对齐上游 tabbar-item resolvedActiveColor / resolvedInactiveColor）
+
+    /// 上游 `resolvedActiveColor`：默认 #1989fa 映射主题 primary(#3c9cff)。
+    public func resolvedActiveColorValue() -> String {
+        (activeColor.isEmpty || activeColor == "#1989fa") ? "#3c9cff" : activeColor
+    }
+    /// 上游 `resolvedInactiveColor`：默认 #7d7e80 映射主题 content(#606266)。
+    public func resolvedInactiveColorValue() -> String {
+        (inactiveColor.isEmpty || inactiveColor == "#7d7e80") ? "#606266" : inactiveColor
+    }
+    /// 上游 `itemInlineStyle.backgroundColor`。
+    public func itemBackgroundValue(active: Bool) -> String {
+        let value = active ? activeBackgroundColor : inactiveBackgroundColor
+        return value.isEmpty ? "transparent" : value
+    }
+    /// 上游 `textMode`：`none` 不显示文字（原生扩展），其余显示。
+    public var showsText: Bool { textMode != "none" }
+    /// 上游 `textClassNames`：`textMode == "active"` 且非激活时静音（淡化）。
+    public func isTextMuted(active: Bool) -> Bool { textMode == "active" && !active }
+
     public var body: some View {
-        HStack {
+        HStack(alignment: .top, spacing: 0) {
             ForEach(items) { item in
+                let active = item.name == selectedValue
                 Button { select(item.name); item.triggerClick() } label: {
                     VStack(spacing: 3) {
-                        if !item.icon.isEmpty { Image(systemName: resolvedIcon(for: item)) }
-                        if textMode != "none" { Text(item.text).font(.caption) }
+                        if !item.icon.isEmpty {
+                            UPIcon(name: resolvedIcon(for: item),
+                                   color: active ? resolvedActiveColorValue() : resolvedInactiveColorValue(),
+                                   size: "\(Int(20 * iconScale))px")
+                        }
+                        if showsText {
+                            Text(item.text)
+                                .font(.system(size: 12))
+                                .foregroundStyle(UPColor.parse(active ? resolvedActiveColorValue() : resolvedInactiveColorValue()))
+                                .opacity(isTextMuted(active: active) ? 0.35 : 1)
+                        }
                     }
-                    .foregroundStyle(UPColor.parse(item.name == selectedValue ? activeColor : inactiveColor))
                     .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
+                    .background(itemBackgroundValue(active: active) == "transparent"
+                                ? Color.clear
+                                : UPColor.parse(itemBackgroundValue(active: active)))
                 }.buttonStyle(.plain)
             }
         }

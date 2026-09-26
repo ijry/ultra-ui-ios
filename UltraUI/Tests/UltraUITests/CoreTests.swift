@@ -47,6 +47,31 @@ final class CoreTests: XCTestCase {
         assertColor(UPColor.parse("not-a-color"), UPTheme.default.content)
     }
 
+    /// 上游样式里大量出现 `transparent`/`none`，应解析为全透明而非回落内容色。
+    func testColorTransparentAndNone() {
+        assertColor(UPColor.parse("transparent"), .clear)
+        assertColor(UPColor.parse("none"), .clear)
+        assertColor(UPColor.parse("  Transparent  "), .clear)
+    }
+
+    /// 上游 CSS 颜色常写成 `rgb()`/`rgba()`（如 toast 的 `rgb(255,255,255)`、
+    /// navbar-mini 的 `rgba(0,0,0,.15)`），需要按 CSS 规则解析。
+    func testColorRgbAndRgba() {
+        assertColor(UPColor.parse("rgb(255, 255, 255)"), .white)
+        assertColor(UPColor.parse("rgb(60,156,255)"), Color(red: 60/255.0, green: 156/255.0, blue: 255/255.0))
+        assertColor(UPColor.parse("rgba(0, 0, 0, 0.15)"), Color(red: 0, green: 0, blue: 0, opacity: 0.15))
+        // 省略前导 0 的小数透明度（`.15`）也要吃得下。
+        assertColor(UPColor.parse("rgba(0,0,0,.5)"), Color(red: 0, green: 0, blue: 0, opacity: 0.5))
+        // 百分比 alpha（CSS Color 4）。
+        assertColor(UPColor.parse("rgba(255,255,255,50%)"), Color(red: 1, green: 1, blue: 1, opacity: 0.5))
+    }
+
+    /// 非法 rgb 串仍回落内容色，保持既有兜底行为。
+    func testColorMalformedRgbFallsBack() {
+        assertColor(UPColor.parse("rgb(1,2)"), UPTheme.default.content)
+        assertColor(UPColor.parse("rgb()"), UPTheme.default.content)
+    }
+
     func testRpx() {
         XCTAssertEqual(UPUnit.rpx(650), 650.0, accuracy: 0.001)
         XCTAssertEqual(UPUnit.rpx(325), 325.0, accuracy: 0.001)

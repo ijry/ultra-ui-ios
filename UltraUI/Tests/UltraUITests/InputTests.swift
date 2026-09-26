@@ -142,6 +142,25 @@ final class InputTests: XCTestCase {
         XCTAssertEqual(changeEvents, ["ABC"])
     }
 
+    /// 上游 `wrapperStyle`：disabled 时背景取 `disabledColor` 或回落 bgColor(#f3f4f6)。
+    func testInputResolvedDisabledBackground() {
+        XCTAssertEqual(UPInput(disabled: true).resolvedDisabledBackgroundValue(), "#f3f4f6")
+        XCTAssertEqual(UPInput(disabled: true, disabledColor: "#eeeeee").resolvedDisabledBackgroundValue(), "#eeeeee")
+    }
+
+    /// 上游 `inputBorderColor`：亮色 #dadbde、暗色 rgba(255,255,255,0.08)。
+    func testInputResolvedBorderColor() {
+        XCTAssertEqual(UPInput().resolvedBorderColorValue(isDark: false), "#dadbde")
+        XCTAssertEqual(UPInput().resolvedBorderColorValue(isDark: true), "rgba(255, 255, 255, 0.08)")
+    }
+
+    /// 上游 `inputStyle.color`：`color` 或回落 mainColor(#303133)，不因 disabled 变色。
+    func testInputResolvedTextColor() {
+        XCTAssertEqual(UPInput().resolvedTextColorValue(), "#303133")
+        XCTAssertEqual(UPInput(color: "#1a1a1a").resolvedTextColorValue(), "#1a1a1a")
+        XCTAssertEqual(UPInput(disabled: true).resolvedTextColorValue(), "#303133")
+    }
+
     func testUnknownBorderAndTypeUseSafeFallbacks() {
         XCTAssertEqual(UPInput.resolvedBorder("unexpected"), "surround")
         XCTAssertEqual(UPInput.resolvedType("unexpected"), "text")

@@ -85,6 +85,7 @@ public struct UPInput: View {
 
     @Environment(\.upFormContext) private var form
     @Environment(\.upTheme) private var theme
+    @Environment(\.colorScheme) private var colorScheme
     @State private var localText: String
     @State private var passwordVisible = false
     @FocusState private var isFocused: Bool
@@ -235,18 +236,18 @@ public struct UPInput: View {
             .frame(minHeight: 42)
             .font(.system(size: resolvedFontSize))
             .foregroundStyle(displayColor)
-            .background(disabled && !disabledColor.isEmpty ? UPColor.parse(disabledColor, theme: theme) : Color.clear)
+            .background(disabled ? UPColor.parse(resolvedDisabledBackgroundValue(), theme: theme) : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             .overlay {
                 if Self.resolvedBorder(border) == "surround" {
                     RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(theme.border, lineWidth: 1)
+                        .stroke(UPColor.parse(resolvedBorderColorValue(isDark: colorScheme == .dark), theme: theme), lineWidth: 0.5)
                 }
             }
             .overlay(alignment: .bottom) {
                 if Self.resolvedBorder(border) == "bottom" {
                     Rectangle()
-                        .fill(theme.border)
+                        .fill(UPColor.parse(resolvedBorderColorValue(isDark: colorScheme == .dark), theme: theme))
                         .frame(height: 0.5)
                 }
             }
@@ -485,6 +486,21 @@ public struct UPInput: View {
         return "\(currentValue.count)"
     }
 
+    // MARK: - 主题回落色（对齐上游 wrapperStyle / inputBorderColor / inputStyle）
+
+    /// 上游 `wrapperStyle`：disabled 背景取 disabledColor 或回落 bgColor(#f3f4f6)。
+    public func resolvedDisabledBackgroundValue() -> String {
+        disabledColor.isEmpty ? "#f3f4f6" : disabledColor
+    }
+    /// 上游 `inputBorderColor`：亮 #dadbde / 暗 rgba(255,255,255,0.08)。
+    public func resolvedBorderColorValue(isDark: Bool) -> String {
+        isDark ? "rgba(255, 255, 255, 0.08)" : "#dadbde"
+    }
+    /// 上游 `inputStyle.color`：color 或回落 mainColor(#303133)，不随 disabled 变色。
+    public func resolvedTextColorValue() -> String {
+        color.isEmpty ? "#303133" : color
+    }
+
     private var cornerRadius: CGFloat {
         shape == "circle" ? 21 : 4
     }
@@ -495,8 +511,8 @@ public struct UPInput: View {
     }
 
     private var displayColor: Color {
-        if disabled { return theme.disabled }
-        return color.isEmpty ? theme.main : UPColor.parse(color, theme: theme)
+        // 上游 inputStyle.color 不随 disabled 变色，仅背景变灰。
+        UPColor.parse(resolvedTextColorValue(), theme: theme)
     }
 
     private func clearValue() {

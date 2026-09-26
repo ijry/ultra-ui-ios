@@ -18,6 +18,24 @@ final class TextareaTests: XCTestCase {
 
     /// Upstream's default is `autoHeight: false` with a fixed `height` and
     /// internal scrolling, so a non-auto-height textarea must still wrap.
+    /// 上游 `textareaStyle`：常态白底 #ffffff、disabled 灰底 #f5f7fa。
+    func testTextareaResolvedBackground() {
+        XCTAssertEqual(UPTextarea().resolvedBackgroundValue(), "#ffffff")
+        XCTAssertEqual(UPTextarea(disabled: true).resolvedBackgroundValue(), "#f5f7fa")
+    }
+
+    /// 上游 `textareaBorderColor`：亮 #dadbde / 暗 rgba(255,255,255,0.08)。
+    func testTextareaResolvedBorderColor() {
+        XCTAssertEqual(UPTextarea().resolvedBorderColorValue(isDark: false), "#dadbde")
+        XCTAssertEqual(UPTextarea().resolvedBorderColorValue(isDark: true), "rgba(255, 255, 255, 0.08)")
+    }
+
+    /// 上游 `fieldStyle.color` / `textareaStyle.color`：content(#606266)，不随 disabled 变色。
+    func testTextareaResolvedTextColor() {
+        XCTAssertEqual(UPTextarea().resolvedTextColorValue(), "#606266")
+        XCTAssertEqual(UPTextarea(disabled: true).resolvedTextColorValue(), "#606266")
+    }
+
     func testResolvedLineLimitMapsAutoHeightSafely() {
         XCTAssertEqual(UPTextarea.resolvedLineLimit(autoHeight: false), 1...Int.max)
         XCTAssertEqual(UPTextarea.resolvedLineLimit(autoHeight: true), 3...8)

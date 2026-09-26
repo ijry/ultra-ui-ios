@@ -201,7 +201,7 @@ public struct UPPopup<Content: View>: View {
             .frame(maxWidth: mode == "center" ? nil : .infinity)
             .frame(minHeight: resolvedHeight(minHeight), maxHeight: resolvedHeight(maxHeight))
             .background(bgColor.isEmpty ? Color.white : UPColor.parse(bgColor, theme: theme))
-            .clipShape(RoundedRectangle(cornerRadius: resolvedCornerRadius))
+            .clipShape(UPPopupRoundedCorners(radius: resolvedCornerRadius, corners: UPRectCorner.forPopup(mode: mode)))
             .overlay(alignment: closeIconAlignment) {
                 if closeable {
                     Button {
@@ -372,5 +372,66 @@ public extension UPPopup {
         var copy = self
         copy.onClick = action
         return copy
+    }
+}
+
+/// 四角集合（对齐上游按 mode 选圆角）。
+public struct UPRectCorner: OptionSet, Equatable, Sendable {
+    public let rawValue: Int
+    public init(rawValue: Int) { self.rawValue = rawValue }
+    public static let topLeft = UPRectCorner(rawValue: 1 << 0)
+    public static let topRight = UPRectCorner(rawValue: 1 << 1)
+    public static let bottomLeft = UPRectCorner(rawValue: 1 << 2)
+    public static let bottomRight = UPRectCorner(rawValue: 1 << 3)
+    public static let all: UPRectCorner = [.topLeft, .topRight, .bottomLeft, .bottomRight]
+
+    /// 上游按 popup mode 只圆化背离屏幕边缘的两个角。
+    public static func forPopup(mode: String) -> UPRectCorner {
+        switch mode {
+        case "bottom": return [.topLeft, .topRight]
+        case "top": return [.bottomLeft, .bottomRight]
+        case "left": return [.topRight, .bottomRight]
+        case "right": return [.topLeft, .bottomLeft]
+        default: return .all
+        }
+    }
+}
+
+/// 只圆化指定角的形状。
+struct UPPopupRoundedCorners: Shape {
+    var radius: CGFloat
+    var corners: UPRectCorner
+
+    func path(in rect: CGRect) -> Path {
+        let r = max(0, min(radius, min(rect.width, rect.height) / 2))
+        let tl = corners.contains(.topLeft) ? r : 0
+        let tr = corners.contains(.topRight) ? r : 0
+        let bl = corners.contains(.bottomLeft) ? r : 0
+        let br = corners.contains(.bottomRight) ? r : 0
+
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX + tl, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX - tr, y: rect.minY))
+        if tr > 0 {
+            path.addArc(center: CGPoint(x: rect.maxX - tr, y: rect.minY + tr),
+                        radius: tr, startAngle: .degrees(-90), endAngle: .degrees(0), clockwise: false)
+        }
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - br))
+        if br > 0 {
+            path.addArc(center: CGPoint(x: rect.maxX - br, y: rect.maxY - br),
+                        radius: br, startAngle: .degrees(0), endAngle: .degrees(90), clockwise: false)
+        }
+        path.addLine(to: CGPoint(x: rect.minX + bl, y: rect.maxY))
+        if bl > 0 {
+            path.addArc(center: CGPoint(x: rect.minX + bl, y: rect.maxY - bl),
+                        radius: bl, startAngle: .degrees(90), endAngle: .degrees(180), clockwise: false)
+        }
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + tl))
+        if tl > 0 {
+            path.addArc(center: CGPoint(x: rect.minX + tl, y: rect.minY + tl),
+                        radius: tl, startAngle: .degrees(180), endAngle: .degrees(270), clockwise: false)
+        }
+        path.closeSubpath()
+        return path
     }
 }

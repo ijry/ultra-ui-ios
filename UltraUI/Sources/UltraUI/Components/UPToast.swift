@@ -245,35 +245,47 @@ public struct UPToastView: View {
         .animation(.easeInOut(duration: 0.2), value: center.isShowing)
     }
 
-    private var toastContent: some View {
-        VStack(spacing: 8) {
+    /// 上游内容盒子：非 loading 是横排（图标 marginRight 4），loading 是竖排
+    /// （loading-icon → 12px 间隙 → 文本）。底色 `#585858`、圆角 4，文字白色、
+    /// 字号 15、最大宽 400rpx(=200px)。图标 color 绑定 `type`（主题色），
+    /// loading-icon 固定 circle 模式、白色前景 + `rgb(120,120,120)` 暗环。
+    @ViewBuilder private var toastContent: some View {
+        Group {
             if center.loading || center.type == "loading" {
-                UPLoadingIcon(
-                    show: true,
-                    color: "#ffffff",
-                    textColor: "#ffffff",
-                    vertical: true,
-                    mode: center.loadingMode.isEmpty ? "spinner" : center.loadingMode,
-                    size: 25
-                )
-            } else if !center.icon.isEmpty {
-                UPIcon(name: center.icon, color: "#ffffff", size: "17px")
-            } else if !UPToast.iconName(for: center.type).isEmpty {
-                UPIcon(name: UPToast.iconName(for: center.type), color: "#ffffff", size: "17px")
-            }
-
-            if !center.message.isEmpty {
-                Text(center.message)
-                    .font(.system(size: 14))
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(3)
+                VStack(spacing: 12) {
+                    UPLoadingIcon(
+                        show: true,
+                        color: "rgb(255, 255, 255)",
+                        mode: center.loadingMode.isEmpty ? "circle" : center.loadingMode,
+                        size: 25,
+                        inactiveColor: "rgb(120, 120, 120)"
+                    )
+                    if !center.message.isEmpty { messageText }
+                }
+            } else {
+                HStack(spacing: 4) {
+                    let iconName = UPToast.resolvedIconName(icon: center.icon, type: center.type)
+                    if !iconName.isEmpty {
+                        UPIcon(name: iconName, color: center.type, size: "17px")
+                    }
+                    if !center.message.isEmpty { messageText }
+                }
             }
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 14)
-        .background(Color.black.opacity(0.75))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .frame(maxWidth: 260)
+        .padding(.vertical, 12)
+        .background(UPColor.parse("#585858"))
+        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .frame(maxWidth: 200)
     }
+
+    /// 上游 `u-toast__content__text`：白色、字号 15、行高 15，最多约束在盒宽内。
+    private var messageText: some View {
+        Text(center.message)
+            .font(.system(size: 15))
+            .foregroundStyle(.white)
+            .multilineTextAlignment(.center)
+            .lineLimit(3)
+    }
+
 }

@@ -57,6 +57,7 @@ public struct UPTextarea: View {
 
     @Environment(\.upFormContext) private var form
     @Environment(\.upTheme) private var theme
+    @Environment(\.colorScheme) private var colorScheme
     @State private var localText: String
     @FocusState private var isFocused: Bool
 
@@ -136,6 +137,17 @@ public struct UPTextarea: View {
         _localText = State(initialValue: value)
     }
 
+    // MARK: - 主题回落色（对齐上游 textareaStyle / textareaBorderColor / fieldStyle）
+
+    /// 上游 `textareaStyle.backgroundColor`：常态 #ffffff、disabled #f5f7fa。
+    public func resolvedBackgroundValue() -> String { disabled ? "#f5f7fa" : "#ffffff" }
+    /// 上游 `textareaBorderColor`：亮 #dadbde / 暗 rgba(255,255,255,0.08)。
+    public func resolvedBorderColorValue(isDark: Bool) -> String {
+        isDark ? "rgba(255, 255, 255, 0.08)" : "#dadbde"
+    }
+    /// 上游 `fieldStyle.color`：content(#606266)，不随 disabled 变色。
+    public func resolvedTextColorValue() -> String { "#606266" }
+
     public var body: some View {
         VStack(alignment: .trailing, spacing: 4) {
             ZStack(alignment: .topLeading) {
@@ -158,17 +170,19 @@ public struct UPTextarea: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .frame(minHeight: autoHeight ? nil : max(0, height), alignment: .topLeading)
-            .foregroundStyle(disabled ? theme.disabled : theme.main)
+            .foregroundStyle(UPColor.parse(resolvedTextColorValue(), theme: theme))
+            .background(UPColor.parse(resolvedBackgroundValue(), theme: theme))
+            .clipShape(RoundedRectangle(cornerRadius: UPInput.resolvedBorder(border) == "surround" ? 4 : 0))
             .overlay {
                 if UPInput.resolvedBorder(border) == "surround" {
                     RoundedRectangle(cornerRadius: 4)
-                        .stroke(theme.border, lineWidth: 1)
+                        .stroke(UPColor.parse(resolvedBorderColorValue(isDark: colorScheme == .dark), theme: theme), lineWidth: 0.5)
                 }
             }
             .overlay(alignment: .bottom) {
                 if UPInput.resolvedBorder(border) == "bottom" {
                     Rectangle()
-                        .fill(theme.border)
+                        .fill(UPColor.parse(resolvedBorderColorValue(isDark: colorScheme == .dark), theme: theme))
                         .frame(height: 0.5)
                 }
             }

@@ -78,6 +78,7 @@ public struct UPButton: View {
 
     @State private var tapThrottle = UPButtonTapThrottle()
     @Environment(\.upTheme) private var theme
+    @Environment(\.colorScheme) private var colorScheme
 
     public init<LoadingText: UPButtonUnitValue,
                 LoadingSize: UPButtonUnitValue,
@@ -285,35 +286,37 @@ public struct UPButton: View {
     }
 
     public var body: some View {
+        let isDark = colorScheme == .dark
+        let fg = foregroundColor(isDark: isDark)
         Button(action: handleTap) {
             HStack(spacing: 6) {
                 if loading {
                     UPLoadingIcon(show: true,
-                                  color: foregroundColor.upHexString,
+                                  color: resolvedLoadingColorValue(isDark: isDark),
                                   mode: loadingMode,
                                   size: loadingSize)
                 } else if !icon.isEmpty {
                     UPIcon(name: icon,
-                           color: iconColor.isEmpty ? foregroundColor.upHexString : iconColor,
+                           color: resolvedIconColorValue(isDark: isDark),
                            size: "\(loadingSize)px")
                 }
                 if let defaultSlotContent, !loading {
                     defaultSlotContent
                         .font(.system(size: Self.fontSize(for: size)))
-                        .foregroundStyle(foregroundColor)
+                        .foregroundStyle(fg)
                 } else if !displayText.isEmpty {
                     Text(displayText)
                         .font(.system(size: Self.fontSize(for: size)))
-                        .foregroundStyle(foregroundColor)
+                        .foregroundStyle(fg)
                 }
             }
             .frame(maxWidth: block || size == "large" || size == "normal" ? .infinity : nil)
             .frame(minWidth: minWidth, minHeight: Self.height(for: size))
             .padding(.horizontal, horizontalPadding)
-            .background(backgroundColor)
+            .background(backgroundColor(isDark: isDark))
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .stroke(borderColor, lineWidth: hairline ? 0.5 : 1)
+                    .stroke(borderColor(isDark: isDark), lineWidth: hairline ? 0.5 : 1)
             )
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             .opacity(disabled ? 0.5 : 1)
@@ -348,30 +351,66 @@ public struct UPButton: View {
         shape == "circle" ? Self.height(for: size) / 2 : 3
     }
 
-    private var themeColor: Color {
-        switch type {
-        case "primary": return theme.primary
-        case "success": return theme.success
-        case "error": return theme.error
-        case "warning": return theme.warning
-        default: return theme.info
-        }
+    // MARK: - 颜色（对齐上游 baseColor / loadingColor / iconColorCom）
+
+    /// 上游 `themeTypeColor` 的回落色板；未知 type 归为 info。
+    private static let typeFallback: [String: String] = [
+        "primary": "#3c9cff",
+        "success": "#5ac725",
+        "warning": "#f9ae3d",
+        "error": "#f56c6c",
+        "info": "#909399"
+    ]
+    /// 上游 `themeTypeColor`：`fallbackMap[type] ? type : 'info'`。
+    private var typeColorValue: String { Self.typeFallback[type] ?? "#909399" }
+    private func mainColorValue(isDark: Bool) -> String { isDark ? "#f5f5f5" : "#303133" }
+    private func borderColorValue(isDark: Bool) -> String { isDark ? "#3a3a3c" : "#dadbde" }
+    private func infoBackgroundValue(isDark: Bool) -> String { isDark ? "#1c1c1e" : "#ffffff" }
+    private var isInfo: Bool { type == "info" || Self.typeFallback[type] == nil }
+
+    /// 上游 `baseColor.backgroundColor`。plain 或 plain+color 均为透明。
+    public func resolvedBackgroundValue(isDark: Bool) -> String {
+        if !color.isEmpty { return plain ? "transparent" : color }
+        if plain { return "transparent" }
+        return isInfo ? infoBackgroundValue(isDark: isDark) : typeColorValue
     }
 
-    private var backgroundColor: Color {
-        if plain { return .clear }
-        if !color.isEmpty { return UPColor.parse(color, theme: theme) }
-        return themeColor
+    /// 上游 `baseColor.color` / `nvueTextStyle.color`。
+    public func resolvedTextColorValue(isDark: Bool) -> String {
+        if !color.isEmpty { return plain ? color : "#ffffff" }
+        if plain { return isInfo ? mainColorValue(isDark: isDark) : typeColorValue }
+        return isInfo ? mainColorValue(isDark: isDark) : "#ffffff"
     }
 
-    private var foregroundColor: Color {
-        if plain { return !color.isEmpty ? UPColor.parse(color, theme: theme) : themeColor }
-        return .white
+    /// 上游 `baseColor.borderColor`。plain 与实心一致：info 用边框色、其余用类型色。
+    public func resolvedBorderColorValue(isDark: Bool) -> String {
+        if !color.isEmpty { return color }
+        return isInfo ? borderColorValue(isDark: isDark) : typeColorValue
     }
 
-    private var borderColor: Color {
-        if !color.isEmpty { return UPColor.parse(color, theme: theme) }
-        return themeColor
+    /// 上游 `loadingColor`。
+    public func resolvedLoadingColorValue(isDark: Bool) -> String {
+        if plain { return color.isEmpty ? typeColorValue : color }
+        if isInfo { return isDark ? "#9ca3af" : "#c9c9c9" }
+        return "rgb(200, 200, 200)"
+    }
+
+    /// 上游 `iconColorCom`。
+    public func resolvedIconColorValue(isDark: Bool) -> String {
+        if !iconColor.isEmpty { return iconColor }
+        if plain { return color.isEmpty ? typeColorValue : color }
+        return isInfo ? mainColorValue(isDark: isDark) : "#ffffff"
+    }
+
+    private func backgroundColor(isDark: Bool) -> Color {
+        let value = resolvedBackgroundValue(isDark: isDark)
+        return value == "transparent" ? .clear : UPColor.parse(value, theme: theme)
+    }
+    private func foregroundColor(isDark: Bool) -> Color {
+        UPColor.parse(resolvedTextColorValue(isDark: isDark), theme: theme)
+    }
+    private func borderColor(isDark: Bool) -> Color {
+        UPColor.parse(resolvedBorderColorValue(isDark: isDark), theme: theme)
     }
 
     private func handleTap() {

@@ -6,26 +6,56 @@ public struct UPLine: View {
         case points(CGFloat)
     }
 
-    var color: String
-    var length: String
-    var direction: String
-    var hairline: Bool
-    var margin: Double
-    var dashed: Bool
+    public var color: String
+    public var length: String
+    public var direction: String
+    public var hairline: Bool
+    public var margin: String
+    public var dashed: Bool
+    /// 上游 mixin 提供的 `customStyle`，`lineStyle` 末尾 `deepMerge` 叠加、可覆盖内建样式。
+    public var customStyle: UPStyle
 
     public init(color: String = UPConfig.line.color,
-                length: String = UPConfig.line.length,
+                length: some UPImageUnitValue = UPConfig.line.length,
                 direction: String = UPConfig.line.direction,
                 hairline: Bool = UPConfig.line.hairline,
-                margin: Double = UPConfig.line.margin,
-                dashed: Bool = UPConfig.line.dashed) {
+                margin: some UPImageUnitValue = UPConfig.line.margin,
+                dashed: Bool = UPConfig.line.dashed,
+                customStyle: UPStyle = UPStyle()) {
         self.color = color
-        self.length = length
+        self.length = length.upImageUnitValue
         self.direction = direction
         self.hairline = hairline
-        self.margin = margin
+        self.margin = margin.upImageUnitValue
         self.dashed = dashed
+        self.customStyle = customStyle
     }
+
+    /// 上游 CSS `margin` 简写解析（1/2/3/4 值）。值走 `UPUnit.parse`（支持 px/rpx），
+    /// 空串或解析不到时按 0 处理。
+    public static func marginInsets(_ value: String) -> EdgeInsets {
+        let parts = value.split(whereSeparator: { $0 == " " })
+            .map { UPUnit.parse(String($0)) }
+        switch parts.count {
+        case 0:
+            return EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
+        case 1:
+            let v = parts[0]
+            return EdgeInsets(top: v, leading: v, bottom: v, trailing: v)
+        case 2:
+            // 上下 / 左右
+            return EdgeInsets(top: parts[0], leading: parts[1], bottom: parts[0], trailing: parts[1])
+        case 3:
+            // 上 / 左右 / 下
+            return EdgeInsets(top: parts[0], leading: parts[1], bottom: parts[2], trailing: parts[1])
+        default:
+            // 上 / 右 / 下 / 左（CSS 顺序）
+            return EdgeInsets(top: parts[0], leading: parts[3], bottom: parts[2], trailing: parts[1])
+        }
+    }
+
+    /// 实例级 margin insets。
+    public var marginInsets: EdgeInsets { Self.marginInsets(margin) }
 
     /// Parses uview-plus `length` values such as `"100%"`, `"20px"`, and `"650rpx"`.
     public static func parsedLength(_ value: String) -> Length {
@@ -46,7 +76,8 @@ public struct UPLine: View {
                 verticalLine
             }
         }
-        .padding(CGFloat(margin))
+        .padding(marginInsets)
+        .upStyle(customStyle)
     }
 
     private var lineColor: Color {

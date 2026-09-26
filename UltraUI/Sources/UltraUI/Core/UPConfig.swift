@@ -86,11 +86,11 @@ public enum UPConfig {
         public static let zIndex: Double = 10090
         public static let loading = false
         public static let message = ""
-        public static let icon = ""
+        public static let icon = "true"
         public static let type = ""
         public static let loadingMode = ""
         public static let show = false
-        public static let overlay = false
+        public static let overlay = true
         public static let position = "center"
         public static let params: [String: String] = [:]
         public static let duration: Double = 2000
@@ -131,7 +131,7 @@ public enum UPConfig {
         public static let length = "100%"
         public static let direction = "row"
         public static let hairline = true
-        public static let margin: Double = 0
+        public static let margin = "0"
         public static let dashed = false
     }
 
