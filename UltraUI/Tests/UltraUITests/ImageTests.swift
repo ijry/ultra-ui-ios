@@ -25,6 +25,35 @@ final class ImageTests: XCTestCase {
         XCTAssertEqual(image.bgColor, "#f3f4f6")
     }
 
+    /// Contract test mirroring the UPFlex treatment: the `UPConfig.image`
+    /// defaults are the iOS reflection of the shared cross-platform source of
+    /// truth at `contracts/up-image.contract.json`. Each assertion pins one
+    /// `UPConfig.image` constant to that contract's canonical default so any
+    /// drift on either side breaks the build.
+    ///
+    /// Note on types: the contract expresses `radius` and `duration` as numbers
+    /// (`0` and `500`). iOS keeps `radius` as a `String` ("0") and `duration`
+    /// as an `Int` (500), so these assert value equality, not type equality —
+    /// as directed by the shared contract for the iOS end.
+    func testConfigDefaultsMatchSharedContract() {
+        XCTAssertEqual(UPConfig.image.src, "")
+        XCTAssertEqual(UPConfig.image.mode, "aspectFill")
+        XCTAssertEqual(UPConfig.image.width, "300")
+        XCTAssertEqual(UPConfig.image.height, "225")
+        XCTAssertEqual(UPConfig.image.shape, "square")
+        XCTAssertEqual(UPConfig.image.radius, "0")
+        XCTAssertTrue(UPConfig.image.lazyLoad)
+        XCTAssertTrue(UPConfig.image.showMenuByLongpress)
+        XCTAssertEqual(UPConfig.image.loadingIcon, "photo")
+        XCTAssertEqual(UPConfig.image.errorIcon, "error-circle")
+        XCTAssertTrue(UPConfig.image.showLoading)
+        XCTAssertTrue(UPConfig.image.showError)
+        XCTAssertTrue(UPConfig.image.fade)
+        XCTAssertFalse(UPConfig.image.webp)
+        XCTAssertEqual(UPConfig.image.duration, 500)
+        XCTAssertEqual(UPConfig.image.bgColor, "#f3f4f6")
+    }
+
     func testInitialPresentationUsesErrorForEmptySourceAndLoadingForNonemptySource() {
         let empty = UPImage()
         let pending = UPImage(src: "https://example.com/avatar.png")
